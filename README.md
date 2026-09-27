@@ -62,7 +62,7 @@ Mains is present on the board: use an isolation transformer when probing.
 | `src/` | Firmware; one module per spec section (see headers) |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |
-| `tools/` | `mkimage.py` (OTA header), `gen_tables.py` |
+| `tools/` | `mkimage.py` (OTA header), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122) |
 | `vendor/FT32F0xx_DFP/` | Unmodified FMD device pack: CMSIS headers, drivers, SVD |
 
 ## Provenance of the less obvious parts
