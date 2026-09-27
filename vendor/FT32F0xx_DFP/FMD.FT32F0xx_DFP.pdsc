@@ -1,0 +1,1967 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<package schemaVersion="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="PACK.xsd">
+  <vendor>FMD</vendor>
+  <url>https://www.fremontmicro.com/upload/tools/pack/</url>
+  <name>FT32F0xx_DFP</name>
+  <description>FremontMicro FT32F0 Series Device Support and Examples</description>
+  
+  <releases>
+    <release version="1.1.4" date="2026-03-13">
+	 Examples:
+      - Updated FLASH
+    </release>
+    <release version="1.1.3" date="2025-08-07">
+	 Examples:
+      - Updated RTC
+    </release>
+    <release version="1.1.2" date="2025-03-06">
+	  Release Note:
+      - Updated: documentation.
+	 Examples:
+      - Updated DMA
+      - Updated OPA
+    </release>
+    <release version="1.1.1" date="2024-08-29">
+	 Examples:
+      - Updated COMP
+      - Updated IWDG
+      - Updated TIM
+    </release>
+    <release version="1.1.0" date="2024-01-19">
+	  Release Note:
+	  Device support:
+	  - Deleted FT32F072KBDWx	  
+    </release>
+    <release version="1.0.9" date="2023-11-02">
+	  Release Note:
+	  Device support:
+	  - Added: Devices FT32F072CBBTx
+	  - Added: Devices FT32F030F8APx
+	  - Added: Devices FT32F032G8CSx
+	  - Added: Devices FT32F030RBATx 
+	  - Modify FT32F032G8B -> FT32F032G8BSx
+	  - Modify FT32F032K8B -> FT32F032K8BUx
+	  Examples:
+      - Updated PWR_Stop_WAKUP_COMP \ PWR_Stop_WAKUP_EX_INTERRUPT
+      - Updated USB_VCP
+      - Updated RTC ALARM STOP WAKE
+	  - Added PWR_Stop_MIN_SYS
+    </release>
+    <release version="1.0.8" date="2022-09-06">
+	  - Added: example of IAR.
+    </release>
+    <release version="1.0.7" date="2022-08-26">
+	Release Note:
+	  Device support:
+	  - Added: Devices FT32F030KBCU7 FT32F072KBCW7 FT32F072KBDW7
+	  - Deleted: Devices FT32F072KBCU7
+	  - Added: FT32F0xB.svd
+	  - Added: ft32f030xb.h ft32f072x6.h
+	  Driver:
+	  - Updated Comp flash file.
+	  - Updated Examples.
+	  - Deleted component of touch.
+	  - Deleted example of touch.
+    </release>
+    <release version="1.0.6" date="2022-05-17">
+      Device support:
+      - Added: Devices FT32F072K6BT7, FT32F072KBBT7, FT32F072KBBU7, FT32F072KBCU7
+      - Added: Devices FT32F030CBAT7, FT32F030K8A
+      Driver:
+      - Updated Power Timer Driver file.
+      - Updated ft32f0xx_conf.h file.
+    </release>
+    <release version="1.0.5" date="2022-01-24">
+	  - Modify DIV COMP OPA ADC DIV Driver files.
+	  - Modify Starter-kit-072 board doc.
+	  - Added: Examples.
+    </release>
+    <release version="1.0.4" date="2022-01-21">
+	  - Modify the system clock configuration
+	  - Added: Devices FT32F032K8B, FT32F032G8B.
+      - Added: FT32F032x8.h files.	
+	  - Added: Devices FT32F072RBATx, FT32F072CBAT7.
+      - Added: DIV Driver files.
+      - Updated: documentation.
+    </release>
+    <release version="1.0.2" date="2021-10-22">
+      - Added: Touch library. Demo is also included.
+      - Added: Starter-kit-072 board description and examples.
+      - Updated: documentation.
+    </release>
+    <release version="1.0.1" date="2021-08-03">
+      - Updated FT32Driver files.
+    </release>
+    <release version="1.0.0" date="2021-07-14">
+      - First Release version of FT32F0 Device Family Pack.
+    </release>
+  </releases>
+  
+  <keywords>
+    <!-- keywords for indexing -->
+    <keyword>FMD</keyword>
+    <keyword>Device Support</keyword>
+    <keyword>Device Family Package FremontMicro</keyword>
+    <keyword>FT32F0</keyword>
+    <keyword>FT32</keyword>
+  </keywords>
+  
+  <devices>
+    <family Dfamily="FT32F0 Series" Dvendor="FMD:169">
+      <processor Dcore="Cortex-M0" DcoreVersion="r0p0" Dfpu="0" Dmpu="0" Dendian="Little-endian"/>
+      <book    name="Documentation/dui0497a_cortex_m0_r0p0_generic_ug.pdf" title="Cortex-M0 Generic User Guide"/>
+      	<description>
+        FT32 is a 32-bit high performance, low power consumption universal microcontroller family powered by the ARM Cortex-M0 RISC core,which targeted at various MCU application areas.FT32 family integrates high speed memory and powerful enhanced I/O.
+
+  Frequency up to 96MHZ
+  Single-cycle hardware multiplier
+  NVIC with 32 interrupt vectors, 2 watchpoint and 4 priority levels
+  SWD debug interface, 4 hardware breakpoints
+  7 Timers: 
+  - One 16-bit advanced-control timer , 
+  - Five 16-bit general purpose timers, 
+  - One 16-bit basic timer
+        </description> 
+      
+       <!-- ************************  Subfamily 'FT32F030'  **************************** -->
+      <subFamily DsubFamily="FT32F030">
+        <processor Dclock="72000000"/>
+        <compile header="Drivers/CMSIS/FT32F0xx/Include/ft32f0xx.h"/>
+        <debug svd="CMSIS/SVD/FT32F0xx.svd"/>
+
+        <debugvars configfile="CMSIS/Debug/FT32F030_070.dbgconf">
+          __var DbgMCU_CR      = 0x00000006;   // DBGMCU_CR:  DBG_STOP, DBG_STANDBY
+          __var DbgMCU_APB1_Fz = 0x00000000;   // DGBMCU_APB1_FZ: All Peripherals Operate as in Normal Mode
+          __var DbgMCU_APB2_Fz = 0x00000000;   // DGBMCU_APB2_FZ: All Peripherals Operate as in Normal Mode
+          __var DoOptionByteLoading = 0;       // Disabled
+        </debugvars>
+
+        <book name="Documentation/FT32F0xxx8_RM_V1.60_cn.pdf" title="FT32F0xx Reference Manual"/>
+        <book name="Documentation/FT32F0xxxB_RM_V1.30_cn.pdf" title="FT32F0xxB Reference Manual"/>
+        <book name="Documentation/FT32F030xx_32F032xx_DS_V1.16_cn.pdf" title="FT32F03xxx Data Sheet"/>
+        <book name="Documentation/FT32F030xB_DS_V1.10_cn.pdf" title="FT32F03xBx Data Sheet"/>
+
+        <feature type="WDT"           n="2"/>
+        <feature type="RTC"           n="32768"/>
+        <feature type="Timer"         n="7"       m="16"/>
+        <feature type="Temp"          n="-40"     m="105"/>
+        <feature type="VCC"           n="2.50"    m="5.50"/>
+        <!-- *************************  Device 'FT32F030R8'  ***************************** -->
+        <device Dname="FT32F030R8">
+          <compile define="FT32F030x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"   start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="16"       m="12"/>
+          <feature type="IOs"           n="55"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="2"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <variant Dvariant="FT32F030R8ATx">
+            <feature type="LQFP" n="64"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F030C8'  ***************************** -->
+        <device Dname="FT32F030C8">
+          <compile define="FT32F030x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"  start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="10"       m="12"/>
+          <feature type="IOs"           n="39"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="2"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <variant Dvariant="FT32F030C8ATx">
+            <feature type="LQFP" n="48"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F030G8'  ***************************** -->
+        <device Dname="FT32F030G8">
+          <compile define="FT32F030x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"  start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="10"       m="12"/>
+          <feature type="IOs"           n="23"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="2"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <variant Dvariant="FT32F030G8BUx">
+            <feature type="QFN" n="28"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F030K6'  ***************************** -->
+        <device Dname="FT32F030K6">
+          <compile define="FT32F030x6"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00008000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00001000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_32.FLM"   start="0x08000000" size="0x00008000"             default="1"/>
+
+		  <feature type="ADC"           n="10"       m="12"/>
+          <feature type="IOs"           n="25"/>
+          <feature type="SPI"           n="1"       m="18000000"/>
+          <feature type="I2C"           n="1"/>
+          <feature type="USART"         n="1"       m="9000000"/>
+          <variant Dvariant="FT32F030K6ATx">
+            <feature type="LQFP" n="32"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F030F6'  ***************************** -->
+        <device Dname="FT32F030F6">
+          <compile define="FT32F030x6"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00008000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00001000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_32.FLM"   start="0x08000000" size="0x00008000"             default="1"/>
+
+		  <feature type="ADC"           n="9"       m="12"/>
+          <feature type="SPI"           n="1"       m="18000000"/>
+          <feature type="I2C"           n="1"/>
+          <feature type="USART"         n="1"       m="9000000"/>
+          <variant Dvariant="FT32F030F6APx">
+            <feature type="IOs"           n="15"/>
+            <feature type="TSSOP"         n="20"/>
+          </variant>
+          <variant Dvariant="FT32F030F6CUx">
+            <feature type="IOs"           n="16"/>
+            <feature type="QFN"           n="20"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F030K8'  ***************************** -->
+        <device Dname="FT32F030K8">
+          <compile define="FT32F030x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"  start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="10"       m="12"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <variant Dvariant="FT32F030K8BUx">
+            <feature type="SPI"           n="1"       m="18000000"/>
+            <feature type="I2C"           n="1"/>
+            <feature type="IOs"           n="28"/>
+            <feature type="QFN" n="32"/>
+          </variant>
+          <variant Dvariant="FT32F030K8ATx">
+            <feature type="SPI"           n="2"       m="18000000"/>
+            <feature type="I2C"           n="2"/>
+            <feature type="IOs"           n="25"/>
+            <feature type="LQFP" n="32"/>
+          </variant>
+        </device>
+		<!-- *************************  Device 'FT32F030CB'  ***************************** -->
+        <device Dname="FT32F030CB">
+		  <processor Dclock="96000000"/>
+          <compile define="FT32F030xB"/>
+          <debug svd="CMSIS/SVD/FT32F0xB.svd"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00020000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00006000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_128.FLM"  start="0x08000000" size="0x00020000"             default="1"/>
+
+		  <feature type="ADC"           n="10"      m="12"/>
+          <feature type="DAC"           n="2"       m="7"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="2"/>
+          <feature type="IOs"           n="39"/>
+          <variant Dvariant="FT32F030CBATx">
+            <feature type="LQFP48" n="48"/>
+          </variant>
+        </device>
+		<!-- *************************  Device 'FT32F030KB'  ***************************** -->
+        <device Dname="FT32F030KB">
+		  <processor Dclock="96000000"/>
+          <compile define="FT32F030xB"/>
+          <debug svd="CMSIS/SVD/FT32F0xB.svd"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00020000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00006000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_128.FLM"  start="0x08000000" size="0x00020000"             default="1"/>
+
+		  <feature type="ADC"           n="10"      m="12"/>
+          <feature type="DAC"           n="2"       m="7"/>
+          <feature type="USART"         n="1"       m="9000000"/>
+          <feature type="SPI"           n="1"       m="18000000"/>
+          <feature type="I2C"           n="1"/>
+          <feature type="IOs"           n="25"/>
+          <variant Dvariant="FT32F030KBCUx">
+            <feature type="QFN" n="32"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F030F8'  ***************************** -->
+        <device Dname="FT32F030F8">
+          <compile define="FT32F030x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"  start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="9"       m="12"/>
+          <feature type="IOs"           n="15"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="1"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <variant Dvariant="FT32F030F8APx">
+            <feature type="TSSOP" n="20"/>
+          </variant>
+        </device>
+		<!-- *************************  Device 'FT32F030RB'  ***************************** -->
+        <device Dname="FT32F030RB">
+		  <processor Dclock="96000000"/>
+          <compile define="FT32F030xB"/>
+          <debug svd="CMSIS/SVD/FT32F0xB.svd"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00020000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00006000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_128.FLM"  start="0x08000000" size="0x00020000"             default="1"/>
+
+		  <feature type="ADC"           n="16"      m="12"/>
+          <feature type="DAC"           n="2"       m="7"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="2"/>
+          <feature type="IOs"           n="55"/>
+          <variant Dvariant="FT32F030RBATx">
+            <feature type="LQFP64" n="64"/>
+          </variant>
+        </device>
+      </subFamily> 
+       <!-- ************************  Subfamily 'FT32F032'  **************************** -->
+      <subFamily DsubFamily="FT32F032">
+        <processor Dclock="72000000"/>
+        <compile header="Drivers/CMSIS/FT32F0xx/Include/ft32f0xx.h"/>
+        <debug svd="CMSIS/SVD/FT32F0xx.svd"/>
+
+        <debugvars configfile="CMSIS/Debug/FT32F030_070.dbgconf">
+          __var DbgMCU_CR      = 0x00000006;   // DBGMCU_CR:  DBG_STOP, DBG_STANDBY
+          __var DbgMCU_APB1_Fz = 0x00000000;   // DGBMCU_APB1_FZ: All Peripherals Operate as in Normal Mode
+          __var DbgMCU_APB2_Fz = 0x00000000;   // DGBMCU_APB2_FZ: All Peripherals Operate as in Normal Mode
+          __var DoOptionByteLoading = 0;       // Disabled
+        </debugvars>
+
+        <book name="Documentation/FT32F0xxx8_RM_V1.60_cn.pdf" title="FT32F0xx Reference Manual"/>
+        <book name="Documentation/FT32F030xx_32F032xx_DS_V1.16_cn.pdf" title="FT32F03xxx Data Sheet"/>
+
+        <feature type="WDT"           n="2"/>
+        <feature type="RTC"           n="32768"/>
+        <feature type="DAC"           n="2"       m="7"/>
+        <feature type="Timer"         n="7"       m="16"/>
+        <feature type="Temp"          n="-40"     m="105"/>
+        <feature type="VCC"           n="2.50"    m="5.50"/>
+		<!-- *************************  Device 'FT32F032G8'  ***************************** -->
+        <device Dname="FT32F032G8">
+          <compile define="FT32F032x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"  start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="10"       m="12"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="1"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+		  
+          <variant Dvariant="FT32F032G8BSx">
+			<feature type="Touch"         n="21"/>
+			<feature type="IOs"           n="26"/>
+            <feature type="SOP" n="28"/>
+          </variant>
+          <variant Dvariant="FT32F032G8CSx">
+			<feature type="Touch"         n="24"/>
+			<feature type="IOs"           n="27"/>
+            <feature type="SOP" n="28"/>
+          </variant>
+        </device>
+		
+		<!-- *************************  Device 'FT32F032K8'  ***************************** -->
+        <device Dname="FT32F032K8">
+          <compile define="FT32F032x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"  start="0x08000000" size="0x00010000"             default="1"/>
+
+		  <feature type="ADC"           n="10"       m="12"/>
+		  <feature type="Touch"         n="18"/>
+          <feature type="IOs"           n="28"/>
+          <feature type="SPI"           n="1"       m="18000000"/>
+          <feature type="I2C"           n="1"/>
+          <feature type="USART"         n="2"       m="9000000"/>
+          <variant Dvariant="FT32F032K8BUx">
+            <feature type="QFN" n="32"/>
+          </variant>
+        </device>
+      </subFamily>
+       <!-- ************************  Subfamily 'FT32F072'  **************************** -->
+      <subFamily DsubFamily="FT32F072">
+		<processor Dclock="96000000"/>
+        <compile header="Drivers/CMSIS/FT32F0xx/Include/ft32f0xx.h"/>
+        <debug svd="CMSIS/SVD/FT32F0xx.svd"/>
+        
+        <debugvars configfile="CMSIS/Debug/FT32F030_070.dbgconf">
+          __var DbgMCU_CR      = 0x00000006;   // DBGMCU_CR:  DBG_STOP, DBG_STANDBY
+          __var DbgMCU_APB1_Fz = 0x00000000;   // DGBMCU_APB1_FZ: All Peripherals Operate as in Normal Mode
+          __var DbgMCU_APB2_Fz = 0x00000000;   // DGBMCU_APB2_FZ: All Peripherals Operate as in Normal Mode
+          __var DoOptionByteLoading = 0;       // Disabled
+        </debugvars>
+
+        <book name="Documentation/FT32F0xxx8_RM_V1.60_cn.pdf" title="FT32F0xx Reference Manual"/>
+        <book name="Documentation/FT32F0xxxB_RM_V1.30_cn.pdf" title="FT32F0xxB Reference Manual"/>
+        <book name="Documentation/FT32F072xx_DS_V1.16_cn.pdf" title="FT32F072xx Data Sheet"/>
+        <book name="Documentation/FT32F072xB_DS_V1.12_cn.pdf" title="FT32F072xB Data Sheet"/>
+
+        <feature type="WDT"           n="2"/>
+        <feature type="RTC"           n="32768"/>
+        <feature type="DAC"           n="2"       m="7"/>
+        <feature type="Temp"          n="-40"     m="105"/>
+        <feature type="VCC"           n="2.00"    m="5.50"/>
+        <feature type="Timer"         n="7"       m="16"/>
+        <feature type="SPI"           n="2"       m="18000000"/>
+        <feature type="I2C"           n="2"/>
+        <feature type="USART"         n="2"/>
+        <feature type="USB2.0"        n="1"/>
+        <!-- *************************  Device 'FT32F072R8'  ***************************** -->
+        <device Dname="FT32F072R8">
+          <processor Dclock="72000000"/>
+          <compile define="FT32F072x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"   start="0x08000000" size="0x00010000"             default="1"/>
+
+          <feature type="ADC"           n="16"      m="12"/>
+		  <feature type="Touch"         n="24"/>
+          <!--feature type="IOs"           n="55"/-->
+          <variant Dvariant="FT32F072R8ATx">
+          <feature type="IOs"           n="51"/>
+            <feature type="LQFP"        n="64"/>
+          </variant>
+          <variant Dvariant="FT32F072R8BTx">
+          <feature type="IOs"           n="55"/>
+            <feature type="LQFP"        n="64"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F072C8'  ***************************** -->       
+		 <device Dname="FT32F072C8">
+          <processor Dclock="72000000"/>
+          <compile define="FT32F072x8"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00010000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00002000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_64.FLM"   start="0x08000000" size="0x00010000"             default="1"/>
+
+          <feature type="ADC"           n="10"      m="12"/>
+		  <feature type="Touch"         n="24"/>
+          <variant Dvariant="FT32F072C8ATx">
+			<feature type="IOs"         n="37"/>
+            <feature type="LQFP" 		n="48"/>
+          </variant>
+          <variant Dvariant="FT32F072C8BTx">
+			<feature type="IOs"         n="39"/>
+            <feature type="LQFP" 		n="48"/>
+          </variant>
+        </device>
+		<!-- *************************  Device 'FT32F072K6'  ***************************** -->       
+		 <device Dname="FT32F072K6">
+          <processor Dclock="72000000"/>
+          <compile define="FT32F072x6"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00008000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00001000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_32.FLM"   start="0x08000000" size="0x00008000"             default="1"/>
+
+          <feature type="ADC"           n="10"      m="12"/>
+		  <feature type="Touch"         n="17"/>
+          <feature type="IOs"           n="26"/>
+          <feature type="SPI"           n="2"       m="18000000"/>
+          <feature type="I2C"           n="2"/>
+          <variant Dvariant="FT32F072K6BTx">
+            <feature type="LQFP" n="32"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F072RB'  ***************************** -->       
+		 <device Dname="FT32F072RB">
+          <compile define="FT32F072xB"/>
+          <debug svd="CMSIS/SVD/FT32F0xB.svd"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00020000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00006000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_128.FLM"  start="0x08000000" size="0x00020000"             default="1"/>
+
+          <feature type="ADC"           n="16"      m="12"/>
+		  <feature type="Touch"         n="24"/>
+          <feature type="IOs"           n="51"/>
+          <variant Dvariant="FT32F072RBATx">
+            <feature type="LQFP" n="64"/>
+          </variant>
+        </device>
+        <!-- *************************  Device 'FT32F072CB'  ***************************** -->       
+		 <device Dname="FT32F072CB">
+          <compile define="FT32F072xB"/>
+          <debug svd="CMSIS/SVD/FT32F0xB.svd"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00020000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00006000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_128.FLM"   start="0x08000000" size="0x00020000"             default="1"/>
+
+          <variant Dvariant="FT32F072CBATx">
+			<feature type="ADC"           n="10"      m="12"/>
+			<feature type="Touch"         n="24"/>
+			<feature type="IOs"           n="37"/>
+            <feature type="LQFP" n="48"/>
+          </variant>
+          <variant Dvariant="FT32F072CBBTx">
+			<feature type="ADC"           n="16"      m="12"/>
+			<feature type="Touch"         n="19"/>
+			<feature type="IOs"           n="42"/>
+            <feature type="LQFP" n="48"/>
+          </variant>
+        </device>
+		<!-- *************************  Device 'FT32F072KB'  ***************************** -->       
+		 <device Dname="FT32F072KB">
+          <compile define="FT32F072xB"/>
+          <debug svd="CMSIS/SVD/FT32F0xB.svd"/>
+          <memory id="IROM1"                              start="0x08000000" size="0x00020000" startup="1" default="1"/>
+          <memory id="IRAM1"                              start="0x20000000" size="0x00006000" init   ="0" default="1"/>
+          <algorithm name="CMSIS/Flash/FT32F0xx_128.FLM"   start="0x08000000" size="0x00020000"             default="1"/>
+
+          <feature type="ADC"           n="10"      m="12"/>
+		  <feature type="Touch"         n="24"/>
+          <variant Dvariant="FT32F072KBBTx">
+			<feature type="IOs"         n="25"/>
+            <feature type="LQFP" 		n="32"/>
+          </variant>
+          <variant Dvariant="FT32F072KBBUx">
+			<feature type="IOs"         n="25"/>
+            <feature type="QFN" n="32"/>
+          </variant>
+          <variant Dvariant="FT32F072KBCWx">
+			<feature type="IOs"         n="25"/>
+            <feature type="QFN" n="32"/>
+          </variant>          
+        </device> 		
+      </subFamily>
+    </family>
+  </devices>
+  
+  <conditions>
+	<!-- Compiler Conditions -->
+	<condition id="Compiler ARMCC">
+	    <require Tcompiler="ARMCC"/>
+	  </condition>
+	
+	<!-- Device Conditions --> 
+    <condition id="FT32F0">
+      <description>FremontMicro FT32F0 Series Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F0*"/>
+    </condition> 
+    <condition id="FT32F0x2">
+      <description>FremontMicro FT32F0x2 Series Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F0?2*"/>
+    </condition> 
+    <condition id="FT32F030x6">
+      <description>FremontMicro FT32F030x6 Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F030?6*"/>
+    </condition>
+    <condition id="FT32F030x8">
+      <description>FremontMicro FT32F030x8 Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F030?8*"/>
+    </condition>
+    <condition id="FT32F030xB">
+      <description>FremontMicro FT32F030xB Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F030?B*"/>
+    </condition>
+    <condition id="FT32F032x8">
+      <description>FremontMicro FT32F032x8 Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F032?8*"/>
+    </condition>
+    <condition id="FT32F072x6">
+      <description>FremontMicro FT32F072x6 Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F072?6*"/>
+    </condition>
+    <condition id="FT32F072x8">
+      <description>FremontMicro FT32F072x8 Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F072?8*"/>
+    </condition>
+    <condition id="FT32F072xB">
+      <description>FremontMicro FT32F072xB Devices</description>
+      <require Dvendor="FMD:169"  Dname="FT32F072?B*"/>
+    </condition>
+	
+    
+    <condition id="FT32F0xxxB">
+      <description>FremontMicro FT32F072xB FT32F032xB FT32F030xB Devices</description>
+      <accept condition="FT32F0x2"/>
+      <accept condition="FT32F030xB"/>
+    </condition>
+	
+	<!-- Device + CMSIS Conditions -->
+    <condition id="FT32F0 CMSIS">
+      <description>FremontMicro FT32F0 Series Device and CMSIS-Core</description>
+      <require condition="FT32F0"/>
+      <require Cclass="CMSIS"  Cgroup="CORE"/>
+    </condition>
+ 
+    <!-- Device + Compiler Conditions -->
+    <condition id="FT32F0 ARMCC">
+      <description>FremontMicro FT32F0 Devices and ARMCC Compiler</description>
+      <require condition="FT32F0"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+    <condition id="FT32F030x6 ARMCC">
+      <description>FremontMicro FT32F030x6 Devices and ARMCC Compiler</description>
+      <require condition="FT32F030x6"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+    <condition id="FT32F030x8 ARMCC">
+      <description>FremontMicro FT32F030x8 Devices and ARMCC Compiler</description>
+      <require condition="FT32F030x8"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+    <condition id="FT32F030xB ARMCC">
+      <description>FremontMicro FT32F030xB Devices and ARMCC Compiler</description>
+      <require condition="FT32F030xB"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+    <condition id="FT32F032x8 ARMCC">
+      <description>FremontMicro FT32F032x8 Devices and ARMCC Compiler</description>
+      <require condition="FT32F032x8"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+	<condition id="FT32F072x6 ARMCC">
+      <description>FremontMicro FT32F072x6 Devices and ARMCC Compiler</description>
+      <require condition="FT32F072x6"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+	<condition id="FT32F072x8 ARMCC">
+      <description>FremontMicro FT32F072x8 Devices and ARMCC Compiler</description>
+      <require condition="FT32F072x8"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+	<condition id="FT32F072xB ARMCC">
+      <description>FremontMicro FT32F072xB Devices and ARMCC Compiler</description>
+      <require condition="FT32F072xB"/>
+      <require condition="Compiler ARMCC"/>
+    </condition>
+ 
+    <condition id="FT32F0 STARTUP CORTEX GPIO RCC FLASH">
+      <description>FremontMicro FT32F0 devices, Startup and CORTEX, GPIO, RCC and FLASH</description>
+      <require condition="FT32F0"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="Startup"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="GPIO"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="RCC"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="FLASH"/>
+    </condition>
+	<!-- Device Drivers Conditions -->	
+    <condition id="FT32F0 STDDRIVER ALL">
+      <description>FremontMicro FT32F0 Series Device, CMSIS-Core and Drivers</description>
+      <require condition="FT32F0"/>
+      <require Cclass="CMSIS"  Cgroup="CORE"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="Startup"/>
+      <require Cbundle="StdDriver" Cclass="Device" Cgroup="FT32StdDriver"/>
+    </condition>
+    <condition id="FT32F0 STDDRIVER">
+      <description>FremontMicro FT32F0 devices with Drivers </description>
+      <require condition="FT32F0"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="COMMON"/>
+    </condition>
+	
+    <condition id="FT32F0xxxB STDDRIVER">
+      <description>FremontMicro FT32F0xxxB devices with Drivers </description>
+      <require condition="FT32F0xxxB"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="COMMON"/>
+    </condition>
+
+    <condition id="FT32F0 STDDRIVER DMA">
+      <description>FremontMicro FT32F0 Devices, Drivers, and DMA peripheral</description>
+      <require condition="FT32F0 STDDRIVER"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="DMA"/>
+    </condition>
+	
+    <condition id="FT32F072x8 CMSIS">
+      <description>FremontMicro FT32F072x8 Series Device and CMSIS-Core</description>
+      <require condition="FT32F072x8"/>
+      <require Cclass="CMSIS"  Cgroup="CORE"/>
+    </condition>
+	
+    <condition id="FT32F072xB STDDRIVER">
+      <description>FremontMicro FT32F0 devices with Drivers </description>
+      <require condition="FT32F072xB ARMCC"/>
+      <require Cbundle="StdDriverOne" Cclass="Device" Cgroup="FT32Driver" Csub="COMMON"/>
+    </condition>
+  </conditions>
+       
+  <components>  
+    <bundle Cbundle="StdDriverOne" Cclass="Device" isDefaultVariant="true"  Cversion="1.0.1">
+      <description>All peripheral APIs are selectable as individual components.</description>
+      <doc></doc>
+	  
+      <component Cgroup="Startup"  Cversion="1.0.1"     condition="FT32F0 CMSIS">
+        <description>System Startup for FremontMicro</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_STARTUP_FT32F0XX    /* Device Startup for FT32F0 */
+        </RTE_Components_h>
+        <files>
+          <!--  include folder -->
+          <file category="include" name="Drivers/FT32F0xx_Driver/Inc/"/>
+          <file category="include" name="Drivers/CMSIS/FT32F0xx/Include/"/>		  
+          <file category="header" name="Drivers/CMSIS/FT32F0xx/Include/ft32f0xx.h"/>  
+          <!-- startup files -->
+          <!-- ARM Compiler Toolchain -->
+          <file category="source" condition="FT32F030x6 ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f030x6.s" attr="config" version="1.0.0"/>
+          <file category="source" condition="FT32F030x8 ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f030x8.s" attr="config" version="1.0.0"/>
+		  <file category="source" condition="FT32F030xB ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f072xb.s" attr="config" version="1.0.0"/>
+          <file category="source" condition="FT32F032x8 ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f030x8.s" attr="config" version="1.0.0"/>
+		  <file category="source" condition="FT32F072x6 ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f072xb.s" attr="config" version="1.0.0"/>
+          <file category="source" condition="FT32F072x8 ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f072xb.s" attr="config" version="1.0.0"/>
+          <file category="source" condition="FT32F072xB ARMCC"  name="Drivers/CMSIS/FT32F0xx/source/arm/startup_ft32f072xb.s" attr="config" version="1.0.0"/>
+          <!-- system file -->
+          <file category="source" name="Drivers/CMSIS/FT32F0xx/source/system_ft32f0xx.c" attr="config" version="1.0.0"/>  
+        </files>
+      </component>
+      <!-- FT32F0xx Drivers --> 
+	  <component Cgroup="FT32Driver"  Csub="COMMON"     condition="FT32F0 STARTUP CORTEX GPIO RCC FLASH">
+        <description>Common driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_COMMON
+        </RTE_Components_h>
+        <files>
+          <file category="header" name="Drivers/FT32F0xx_Driver/templates/Inc/ft32f0xx_conf.h"     attr="config"  version="1.0.0"/>
+          <file category="header" name="Drivers/FT32F0xx_Driver/templates/Inc/ft32f0xx_it.h"       attr="template" select="Exception Handlers and Peripheral IRQ"/>
+          <file category="source" name="Drivers/FT32F0xx_Driver/templates/Src/ft32f0xx_it.c"       attr="template" select="Exception Handlers and Peripheral IRQ"/>
+          <file category="header" name="Drivers/FT32F0xx_Driver/templates/Inc/main.h"              attr="template" select="'main' module"/>
+          <file category="source" name="Drivers/FT32F0xx_Driver/templates/Src/main.c"              attr="template" select="'main' module"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="ADC"        condition="FT32F0 STDDRIVER">
+        <description>Analog-to-digital converter (ADC) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_ADC
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_adc.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="COMP"       condition="FT32F0xxxB STDDRIVER">
+        <description>Analog Comparator (COMP) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_COMP
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_comp.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="CRC"        condition="FT32F0 STDDRIVER">
+        <description>CRC calculation unit (CRC) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_CRC
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_crc.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="CRS"        condition="FT32F0 STDDRIVER">
+        <description>Clock recovery system (CRS) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_CRS
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_crs.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="DAC"        condition="FT32F0 STDDRIVER DMA">
+        <description>Digital-to-analog converter (DAC) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_DAC
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_dac.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="DMA"        condition="FT32F0 STDDRIVER">
+        <description>DMA controller (DMA) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_DMA
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_dma.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="DEBUG"      condition="FT32F0 STDDRIVER">
+        <description>Debug MCU (DEBUG) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_DBGMCU
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_debug.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="EXTI"       condition="FT32F0 STDDRIVER">
+        <description>External interrupts and events (EXTI) controller</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_EXTI
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_exti.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="FLASH"      condition="FT32F0 STDDRIVER">
+        <description>Embedded Flash memory driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_FLASH
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_flash.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="GPIO"       condition="FT32F0 STDDRIVER">
+        <description>General-purpose I/O (GPIO) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_GPIO
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_gpio.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="I2C"        condition="FT32F0 STDDRIVER DMA">
+        <description>Inter-integrated circuit (I2C) interface driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_I2C
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_i2c.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="IWDG"       condition="FT32F0 STDDRIVER">
+        <description>Independent watchdog (IWDG) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_IWDG
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_iwdg.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="MISC"       condition="FT32F0 STDDRIVER">
+        <description>Independent NVIC (MISC) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_MISC
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_misc.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="OPA"        condition="FT32F0xxxB STDDRIVER">
+        <description>Operational amplifier (OPA) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_OPA
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_opa.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="PWR"        condition="FT32F0 STDDRIVER">
+        <description>Power controller (PWR) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_PWR
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_pwr.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="RCC"        condition="FT32F0 STDDRIVER">
+        <description>Reset and clock control (RCC) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_RCC
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_rcc.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="RTC"        condition="FT32F0 STDDRIVER">
+        <description>Real-time clock (RTC) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_RTC
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_rtc.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="SPI"        condition="FT32F0 STDDRIVER DMA">
+        <description>Serial peripheral interface (SPI) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_SPI
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_spi.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="SYSCFG"     condition="FT32F0 STDDRIVER DMA">
+        <description>System configuration (SYSCFG) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_SYSCFG
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_syscfg.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="TIM"        condition="FT32F0 STDDRIVER DMA">
+        <description>Timers (TIM) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_TIM
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_tim.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="USART"      condition="FT32F0 STDDRIVER DMA">
+        <description>Universal synchronous asynchronous receiver transmitter (USART) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_USART
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_usart.c"/>
+        </files>
+      </component>
+      <component Cgroup="FT32Driver"  Csub="WWDG"       condition="FT32F0 STDDRIVER">
+        <description>Window watchdog (WWDG) driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_WWDG
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_wwdg.c"/>
+        </files>
+      </component>
+      <!--component Cgroup="FT32Driver"  Csub="Touch"       condition="FT32F0xxxB STDDRIVER">
+        <description>Touch driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_TOUCH
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Lib/ft32f0xx_touch.lib"/>
+          <file category="header" name="Drivers/FT32F0xx_Driver/Lib/ft32f0xx_touch.h"       attr="config"  version="1.0.0"/>
+        </files>
+      </component--> 
+	  <component Cgroup="FT32Driver"  Csub="DIV"       condition="FT32F072xB STDDRIVER">
+        <description>DIV driver</description>
+        <RTE_Components_h>
+          #define RTE_DEVICE_DIV
+        </RTE_Components_h>
+        <files>
+          <file category="source" name="Drivers/FT32F0xx_Driver/Src/ft32f0xx_div.c"/>
+        </files>
+      </component>
+    </bundle>
+
+    <!-- Starter-kit-072 Board Support -->
+    <bundle Cbundle="Starter-kit-072" Cclass="Board Support" Cversion="1.0">
+      <description>FMD FStarter-kit-072 Board</description>
+      <doc></doc>
+      <component Cgroup="LED" Capiversion="1.0" condition="FT32F072x8 CMSIS">
+      <description>LED driver for FremontMicro Starter-kit-072 Board</description>
+        <files>
+          <file category="source" name="Boards/FMD/Starter-kit-072/Common/LED_FT32F072_Starter_kit.c"/>
+        </files>
+      </component>
+      <component Cgroup="Buttons" Capiversion="1.0.0" condition="FT32F072x8 CMSIS">
+      <description>Button driver for FremontMicro Starter-kit-072 Board</description>
+        <files>
+          <file category="sourceC" name="Boards/FMD/Starter-kit-072/Common/Buttons_FT32F072_Starter_kit.c"/>
+        </files>
+      </component>
+    </bundle>
+	
+  </components>  
+  
+  <boards>
+     <board vendor="FMD" name="Starter-kit-072" revision="Ver 1.5">
+		<description>FMD FT32F072 Development Board</description>
+        <image small="Boards/FMD/Starter-kit-072/DOC/Starter-kit-072_small.jpg"
+               large="Boards/FMD/Starter-kit-072/DOC/Starter-kit-072_large.jpg"/>
+        <book category="overview"  name="Boards/FMD/Starter-kit-072/DOC/StarterKit Demo board introduction.pdf" title="Starter-kit-072 introduction"/>
+		<book category="schematic" name="Boards/FMD/Starter-kit-072/DOC/StarterKit-V1.5.pdf"     title="Schematics"/>
+		<mountedDevice deviceIndex="0"    Dvendor="FMD:169" Dname="FT32F072R8"/>
+		<compatibleDevice deviceIndex="0" Dvendor="FMD:169" DsubFamily="FT32F072"/>
+		<feature type="XTAL"   n="8000000"/>
+		<feature type="PWR"    n="5"           name="USB Powered"/>
+		<feature type="PWR"    n="2"  m="5.5"  name="External Supply"/>
+		<feature type="USB"    n="1"           name="USB 2.0 Full Speed Device"/>
+		<feature type="Button" n="3"           name="Reset, KEY1 and KEY2"/>
+		<feature type="LED"    n="4"           name="LEDs directly connected to port pins"/>
+		<debugInterface adapter="SW"/>
+     </board>
+  </boards>
+  
+  <examples>
+        <example name="Starter-kit-072-Blinky" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/Blinky" version="1.0.1">
+            <description>AStarter-kit-072  Blinky example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>LED</keyword>
+            </attributes>
+        </example>
+        <example name="ADC_BasicExample" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_BasicExample" version="1.0.1">
+            <description>AStarter-kit-072  ADC_BasicExample example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+        <example name="ADC_DMA_INTERRUPT" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_DMA_INTERRUPT" version="1.0.1">
+            <description>AStarter-kit-072  ADC_DMA_INTERRUPT example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+        <example name="ADC_InnerTempture" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_InnerTempture" version="1.0.1">
+            <description>AStarter-kit-072  ADC_InnerTempture example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+		<example name="ADC_LowPower" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_LowPower" version="1.0.1">
+            <description>AStarter-kit-072  ADC_LowPower example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+        <example name="ADC_SAMPLEANDHOLD" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_SAMPLEANDHOLD" version="1.0.1">
+            <description>AStarter-kit-072  ADC_SAMPLEANDHOLD example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+		<example name="ADC_SINGLE_CHAN" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_SINGLE_CHAN" version="1.0.1">
+            <description>AStarter-kit-072  ADC_SINGLE_CHAN example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+		<example name="ADC_VDDA_Vrefint" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/ADC_VDDA_Vrefint" version="1.0.1">
+            <description>AStarter-kit-072  ADC_VDDA_Vrefint example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+		<example name="DMA_INTERRUPT_MultiChann_ADC" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/ADC/DMA_INTERRUPT_MultiChann_ADC" version="1.0.1">
+            <description>AStarter-kit-072  DMA_INTERRUPT_MultiChann_ADC example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>ADC</keyword>
+            </attributes>
+        </example>
+		<example name="BSP_COMP" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/COMP/BSP_COMP" version="1.0.1">
+            <description>AStarter-kit-072  BSP_COMP example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>COMP</keyword>
+            </attributes>
+        </example>
+		<example name="CRC" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/CRC" version="1.0.1">
+            <description>AStarter-kit-072  CRC example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>CRC</keyword>
+            </attributes>
+        </example>
+		<example name="DAC" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/DAC" version="1.0.1">
+            <description>AStarter-kit-072  DAC example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>DAC</keyword>
+            </attributes>
+        </example>
+		<example name="DMA_ADCTransfer" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/DMA/DMA_ADCTransfer" version="1.0.1">
+            <description>AStarter-kit-072  DMA_ADCTransfer example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>DMA</keyword>
+            </attributes>
+        </example>
+		<example name="DMA_FLASHRAMTransfer_Program" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/DMA/DMA_FLASHRAMTransfer_Program" version="1.0.1">
+            <description>AStarter-kit-072  DMA_FLASHRAMTransfer_Program example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>DMA</keyword>
+            </attributes>
+        </example>
+		<example name="DMA_USARTTransfer_Project" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/DMA/DMA_USARTTransfer_Project" version="1.0.1">
+            <description>AStarter-kit-072  DMA_USARTTransfer_Project example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>DMA</keyword>
+            </attributes>
+        </example>
+		<example name="DMA_SPI_Master" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/DMA/DMA_SPI_Master" version="1.0.0">
+            <description>AStarter-kit-072  DMA_SPI_Master example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>DMA</keyword>
+            </attributes>
+        </example>
+		<example name="EXTI" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/EXTI" version="1.0.1">
+            <description>AStarter-kit-072  EXTI example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>EXTI</keyword>
+            </attributes>
+        </example>
+		<example name="Flash_WriteProtection" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/FLASH/Flash_WriteProtection_Project" version="1.0.1">
+            <description>AStarter-kit-072  Flash_WriteProtection example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>FLASH</keyword>
+            </attributes>
+        </example>
+		<example name="FlashProgram" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/FLASH/FlashProgram_Project" version="1.0.1">
+            <description>AStarter-kit-072  FlashProgram example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>FLASH</keyword>
+            </attributes>
+        </example>
+		<example name="GPIO_IOToggle" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/GPIO_IOToggle" version="1.0.1">
+            <description>AStarter-kit-072  GPIO_IOToggle example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>GPIO</keyword>
+            </attributes>
+        </example>
+		<example name="I2C_MasterSlave" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/I2C/I2C_MasterSlave" version="1.0.1">
+            <description>AStarter-kit-072  I2C_MasterSlave example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>I2C</keyword>
+            </attributes>
+        </example>
+		<example name="I2C_EEPROM" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/I2C/I2C_EEPROM" version="1.0.1">
+            <description>AStarter-kit-072  I2C_EEPROM example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>I2C</keyword>
+            </attributes>
+        </example>
+		<example name="I2C_OLED" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/I2C/I2C_OLED" version="1.0.1">
+            <description>AStarter-kit-072  I2C_OLED example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>I2C</keyword>
+            </attributes>
+        </example>
+		<example name="I2C_Master" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/I2C/I2C_Master" version="1.0.0">
+            <description>AStarter-kit-072  I2C_Master example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>I2C</keyword>
+            </attributes>
+        </example>
+		<example name="I2C_Slave" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/I2C/I2C_Slave" version="1.0.0">
+            <description>AStarter-kit-072  I2C_Slave example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>I2C</keyword>
+            </attributes>
+        </example>
+		<example name="IWDG_RESET" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/IWDG/IWDG_RESET" version="1.0.1">
+            <description>AStarter-kit-072  IWDG_RESET example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>IWDG</keyword>
+            </attributes>
+        </example>
+		<example name="IWDG_WindowMode" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/IWDG/IWDG_WindowMode" version="1.0.1">
+            <description>AStarter-kit-072  IWDG_WindowMode example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>IWDG</keyword>
+            </attributes>
+        </example>
+		<example name="LED" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/LED" version="1.0.1">
+            <description>AStarter-kit-072  LED example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>LED</keyword>
+            </attributes>
+        </example>
+		<example name="NVIC_WFI_Mode" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/NVIC_WFI_Mode" version="1.0.1">
+            <description>AStarter-kit-072  NVIC_WFI_Mode example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>WFI</keyword>
+            </attributes>
+        </example>
+		<example name="BSP_OPA" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/OPA/BSP_OPA" version="1.0.1">
+            <description>AStarter-kit-072  BSP_OPA example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>OPA</keyword>
+            </attributes>
+        </example>
+		<example name="PWR_Standby_wakup1" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PWR_Standby_wakup1" version="1.0.1">
+            <description>AStarter-kit-072  PWR_Standby example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="PWR_Stop" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PWR_Stop" version="1.0.1">
+            <description>AStarter-kit-072  PWR_Stop example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="PWR_Stop_WAKUP_COMP" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PWR_Stop_WAKUP_COMP" version="1.0.1">
+            <description>AStarter-kit-072  PWR_Stop_WAKUP_COMP example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="PWR_Stop_WAKUP_EX_INTERRUPT" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PWR_Stop_WAKUP_EX_INTERRUPT" version="1.0.1">
+            <description>AStarter-kit-072  PWR_Stop_WAKUP_EX_INTERRUPT example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="PVD" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PVD" version="1.0.0">
+            <description>AStarter-kit-072  PVD example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="PWR_Standby_RTC" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PWR_Standby_RTC" version="1.0.0">
+            <description>AStarter-kit-072  PWR_Standby_RTC example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="PWR_Stop_MIN_SYS" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/PWR/PWR_Stop_MIN_SYS" version="1.0.0">
+            <description>AStarter-kit-072  PWR_Stop_MIN_SYS example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>PWR</keyword>
+            </attributes>
+        </example>
+		<example name="RTC ALARM STOP WAKE" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/RTC/RTC ALARM STOP WAKE" version="1.0.2">
+            <description>AStarter-kit-072  RTC ALARM STOP WAKE example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>RTC</keyword>
+            </attributes>
+        </example>
+		<example name="SPI_EEPROM" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/SPI/SPI_EEPROM" version="1.0.1">
+            <description>AStarter-kit-072  SPI_EEPROM example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>SPI</keyword>
+            </attributes>
+        </example>
+		<example name="SysTick" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/SysTick" version="1.0.1">
+            <description>AStarter-kit-072  SysTick example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>SysTick</keyword>
+            </attributes>
+        </example>
+		<example name="TIM_6Steps" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/TIM_6Steps" version="1.0.1">
+            <description>AStarter-kit-072  TIM_6Steps example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="TIM_7PWMOutputs" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/TIM_7PWMOutputs" version="1.0.1">
+            <description>AStarter-kit-072  TIM_7PWMOutputs example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="TIM_CAPTURE" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/TIM_CAPTURE" version="1.0.1">
+            <description>AStarter-kit-072  TIM_CAPTURE example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="TIM_DELAY" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/TIM_DELAY" version="1.0.1">
+            <description>AStarter-kit-072  TIM_DELAY example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="TIM_DMA_PULS_CNT" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/TIM_DMA_PULS_CNT" version="1.0.1">
+            <description>AStarter-kit-072  TIM_DMA_PULS_CNT example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="TIM_IR" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/TIM_IR" version="1.0.1">
+            <description>AStarter-kit-072  TIM_IR example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="CNT_FOR_INPUT_PULSE" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/TIM/CNT_FOR_INPUT_PULSE" version="1.0.0">
+            <description>AStarter-kit-072  CNT_FOR_INPUT_PULSE example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="USART_AutoBaudRate" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USART/USART_AutoBaudRate_Project" version="1.0.1">
+            <description>AStarter-kit-072  USART_AutoBaudRate example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>TIM</keyword>
+            </attributes>
+        </example>
+		<example name="USART_Printf" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USART/USART_Printf" version="1.0.1">
+            <description>AStarter-kit-072  USART_Printf example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USART</keyword>
+            </attributes>
+        </example>
+		<example name="USART" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USART/USART_Project" version="1.0.1">
+            <description>AStarter-kit-072  USART example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USART</keyword>
+            </attributes>
+        </example>
+		<example name="USART_HalfDuplex" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USART/USART_HalfDuplex" version="1.0.0">
+            <description>AStarter-kit-072  USART_HalfDuplex example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USART</keyword>
+            </attributes>
+        </example>
+		<example name="FT32F072X8_USB_Printer" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/FT32F072X8_USB_Printer" version="1.0.1">
+            <description>AStarter-kit-072  USB_Printer example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+		<example name="USB_Audio" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_Audio" version="1.0.1">
+            <description>AStarter-kit-072  USB_Audio example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>		
+		<example name="USB_Audio_Microphone" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_Audio_Microphone" version="1.0.1">
+            <description>AStarter-kit-072  USB_Audio_Microphone example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>	
+		<example name="USB_HID_Keyboard" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_HID_Keyboard" version="1.0.1">
+            <description>AStarter-kit-072  USB_HID_Keyboard example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>	
+		<example name="USB_HID_Keyboard-with-IapUpgrade" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_HID_Keyboard-with-IapUpgrade" version="1.0.1">
+            <description>AStarter-kit-072  USB_HID_Keyboard-with-IapUpgrade example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+		<example name="USB_HID_KeyboardWithMouse" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_HID_KeyboardWithMouse" version="1.0.1">
+            <description>AStarter-kit-072  USB_HID_KeyboardWithMouse example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+		<example name="USB_HID_Mouse" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_HID_Mouse" version="1.0.1">
+            <description>AStarter-kit-072  USB_HID_Mouse example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+		<example name="USB_HID_VCP" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_HID_VCP" version="1.0.1">
+            <description>AStarter-kit-072  USB_HID_VCP example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+		<example name="USB_MSC" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_MSC" version="1.0.1">
+            <description>AStarter-kit-072  USB_MSC example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+		<example name="USB_Smart_Card" doc="readme.txt" folder="Boards/FMD/Starter-kit-072/Examples/FT32F0xx_SarterKitDemo_Suites/Projects/USB/USB_Smart_Card" version="1.0.1">
+            <description>AStarter-kit-072  USB_Smart_Card example</description>
+            <board name="Starter-kit-072" vendor="FMD"/>
+            <project>
+                <environment name="uv" load="MDK-ARM/FT32F072x_StarterKit.uvprojx"/>
+                <environment name="iar" load="EWARM/FT32F072x_StarterKit.eww"/>
+            </project>
+            <attributes>
+                <component Cclass="CMSIS" Cgroup="CORE"/>
+                <component Cclass="Device" Cgroup="Startup"/>
+                <component Cclass="CMSIS" Cgroup="RTOS"/>
+                <category>Getting Started</category>
+                <category>CMSIS-RTX</category>
+                <keyword>USB</keyword>
+            </attributes>
+        </example>
+    </examples>
+	
+</package>
