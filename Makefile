@@ -1,15 +1,28 @@
 # Makefile for FT32F030C8AT7 (Cortex-M0, 64 KB flash, 8 KB SRAM)
+#
+# The image is linked at 0x08001000 and runs behind the stock bootloader
+# (0x08000000-0x08000FFF); see linker/FT32F030x8.ld.
 
 TARGET   := pir-switch
 BUILD    := build
 
+# Optional features, each enabled with -DFEATURE_<NAME>:
+#   FACTORY_TEST  PF7 held at power-up enters the factory test
+#   WALLSWITCH    PB4 three-way wall-switch input
+#   TELEMETRY     USART2 PIR sample stream at 115200 baud
+#   SENSOR_TEST   DP 115 sensor test modes (and DPs 125/126)
+FEATURES ?= FACTORY_TEST WALLSWITCH TELEMETRY SENSOR_TEST
+
 # Standard peripheral drivers to build. Each entry compiles
 # ft32f0xx_<name>.c and defines RTE_DEVICE_<NAME> so the pack's
-# ft32f0xx_conf.h pulls in the matching header.
-DRIVERS  := rcc gpio misc
+# ft32f0xx_conf.h pulls in the matching header. Everything else is
+# programmed at register level; the flash driver is used because it
+# carries the FT32-specific programming sequence.
+DRIVERS  := flash
 
 DEVICE   := FT32F030x8
 LDSCRIPT := linker/FT32F030x8.ld
+APP_BASE := 0x08001000
 
 DFP      := vendor/FT32F0xx_DFP
 CMSIS    := $(DFP)/Drivers/CMSIS/FT32F0xx
@@ -21,12 +34,16 @@ ASM_SRCS := startup/startup_ft32f030x8.s
 
 INCLUDES := -Isrc -I$(CMSIS)/Include -I$(SPL)/Inc
 
-DEFS     := -D$(DEVICE) $(foreach d,$(DRIVERS),-DRTE_DEVICE_$(shell echo $(d) | tr a-z A-Z))
+upper     = $(shell echo $(1) | tr a-z A-Z)
+DEFS     := -D$(DEVICE) \
+            $(foreach d,$(DRIVERS),-DRTE_DEVICE_$(call upper,$(d))) \
+            $(foreach f,$(FEATURES),-DFEATURE_$(f))
 
 CROSS    ?= arm-none-eabi-
 CC       := $(CROSS)gcc
 OBJCOPY  := $(CROSS)objcopy
 SIZE     := $(CROSS)size
+PYTHON   ?= python3
 
 OPT      ?= -Os
 ARCH     := -mcpu=cortex-m0 -mthumb -mfloat-abi=soft
@@ -42,14 +59,24 @@ LDFLAGS  := $(ARCH) -T$(LDSCRIPT) -Wl,--gc-sections \
 OBJS     := $(addprefix $(BUILD)/,$(C_SRCS:.c=.o) $(ASM_SRCS:.s=.o))
 DEPS     := $(OBJS:.o=.d)
 
-# Flashing via OpenOCD. The FT32F0 flash controller is STM32F0-compatible;
-# override OPENOCD_CFG if your probe or target config differs.
+# Flashing via OpenOCD. Check that `flash info 0` reports 512-byte pages
+# before the first flash; override OPENOCD_CFG for other probes/configs.
 OPENOCD     ?= openocd
 OPENOCD_CFG ?= -f interface/stlink.cfg -f target/stm32f0x.cfg
 
-.PHONY: all clean flash size
+# Host build of the hardware-independent modules for unit tests
+HOST_CC    ?= cc
+TEST_SRCS  := $(wildcard test/*.c) \
+              src/base64.c src/crc32.c src/pir_detect.c src/record.c \
+              src/sched_codec.c src/tables.c src/tuya_frame.c
+TEST_BIN   := $(BUILD)/host/run_tests
+
+.PHONY: all clean flash size backup test tables
 
 all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin size
+
+# The vendor drivers have harmless unused variables
+$(BUILD)/$(DFP)/%.o: CFLAGS += -Wno-unused-variable
 
 $(BUILD)/%.o: %.c Makefile
 	@mkdir -p $(dir $@)
@@ -62,17 +89,35 @@ $(BUILD)/%.o: %.s Makefile
 $(BUILD)/$(TARGET).elf: $(OBJS) $(LDSCRIPT)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
-$(BUILD)/%.hex: $(BUILD)/%.elf
-	$(OBJCOPY) -O ihex $< $@
-
-$(BUILD)/%.bin: $(BUILD)/%.elf
+# The .bin gets its OTA header (length, CRC32) patched in; the .hex is made
+# from the patched .bin so both carry a valid header.
+$(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf tools/mkimage.py
 	$(OBJCOPY) -O binary $< $@
+	$(PYTHON) tools/mkimage.py $@
+
+$(BUILD)/$(TARGET).hex: $(BUILD)/$(TARGET).bin
+	$(OBJCOPY) -I binary -O ihex --change-addresses $(APP_BASE) $< $@
 
 size: $(BUILD)/$(TARGET).elf
 	$(SIZE) $<
 
-flash: $(BUILD)/$(TARGET).elf
+flash: $(BUILD)/$(TARGET).hex
 	$(OPENOCD) $(OPENOCD_CFG) -c "program $< verify reset exit"
+
+# Dump the whole 64 KB flash (bootloader, app, settings) before flashing
+backup:
+	@mkdir -p backup
+	$(OPENOCD) $(OPENOCD_CFG) -c "init; reset halt; dump_image backup/flash-$$(date +%Y%m%d-%H%M%S).bin 0x08000000 0x10000; exit"
+
+tables:
+	$(PYTHON) tools/gen_tables.py > src/tables.c
+
+test: $(TEST_BIN)
+	$(TEST_BIN)
+
+$(TEST_BIN): $(TEST_SRCS) $(wildcard src/*.h test/*.h) Makefile
+	@mkdir -p $(dir $@)
+	$(HOST_CC) -std=gnu11 -Wall -Wextra -g -Isrc -Itest $(TEST_SRCS) -lm -o $@
 
 clean:
 	rm -rf $(BUILD)

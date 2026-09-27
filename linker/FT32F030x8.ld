@@ -1,17 +1,27 @@
-/* Linker script for FT32F030x8 (FT32F030C8AT7): 64 KB flash, 8 KB SRAM */
+/*
+ * Linker script for the FT32F030C8AT7 application image.
+ *
+ * The stock bootloader occupies 0x08000000-0x08000FFF and jumps to the image
+ * at 0x08001000. The image may be at most 0x6FFC bytes: the bootloader copies
+ * 0x7000 bytes from the OTA staging area, whose last word (0x0800EFFC) is the
+ * install marker. 0x0800F000-0x0800FFFF holds settings (see storage.c).
+ *
+ * Cortex-M0 has no VTOR, so startup copies the vector table to the first
+ * 0xC0 bytes of SRAM and remaps SRAM to address 0.
+ */
 
 ENTRY(Reset_Handler)
 
 MEMORY
 {
-  FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 64K
+  FLASH (rx)  : ORIGIN = 0x08001000, LENGTH = 0x6FFC
   RAM   (rwx) : ORIGIN = 0x20000000, LENGTH = 8K
 }
 
 _estack = ORIGIN(RAM) + LENGTH(RAM);
 
 /* Minimum free RAM reserved for heap and stack; link fails if it doesn't fit */
-_Min_Heap_Size  = 0x200;
+_Min_Heap_Size  = 0;   /* no malloc */
 _Min_Stack_Size = 0x400;
 
 SECTIONS
@@ -19,9 +29,15 @@ SECTIONS
   .isr_vector :
   {
     . = ALIGN(4);
+    _svectors = .;
     KEEP(*(.isr_vector))
     . = ALIGN(4);
+    _evectors = .;
+    /* OTA image header at a fixed offset (0xC0) after the vector table */
+    KEEP(*(.image_header))
   } >FLASH
+
+  ASSERT(_evectors - _svectors == 0xC0, "vector table must be 48 words")
 
   .text :
   {
@@ -76,6 +92,15 @@ SECTIONS
     PROVIDE_HIDDEN(__fini_array_end = .);
   } >FLASH
 
+  /* Must be the first RAM section: SRAM is remapped to address 0 */
+  .ram_vectors (NOLOAD) :
+  {
+    _sram_vectors = .;
+    . = . + 0xC0;
+  } >RAM
+
+  ASSERT(_sram_vectors == ORIGIN(RAM), ".ram_vectors must start SRAM")
+
   _sidata = LOADADDR(.data);
 
   .data :
@@ -113,4 +138,6 @@ SECTIONS
   } >RAM
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+
+  _image_end = LOADADDR(.data) + SIZEOF(.data);
 }

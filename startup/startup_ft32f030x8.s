@@ -17,23 +17,36 @@
     .weak Reset_Handler
     .type Reset_Handler, %function
 Reset_Handler:
+    cpsid i                    /* main() enables interrupts after init */
     ldr   r0, =_estack
     mov   sp, r0
 
-    /* If the vector table at 0 is system memory (0x1FFFxxxx), remap flash to 0 */
-    ldr   r0, =0x00000004
-    ldr   r1, [r0]
-    lsrs  r1, r1, #24
-    cmp   r1, #0x1F
-    bne   ApplicationStart
+    /*
+     * The image runs at 0x08001000 behind the stock bootloader. Cortex-M0 has
+     * no VTOR, so copy the vector table to the start of SRAM and remap SRAM
+     * to address 0.
+     */
+    ldr   r0, =_sram_vectors
+    ldr   r1, =_svectors
+    ldr   r2, =_evectors
+6:  ldr   r3, [r1]
+    str   r3, [r0]
+    adds  r0, r0, #4
+    adds  r1, r1, #4
+    cmp   r1, r2
+    bcc   6b
+
     ldr   r0, =0x40021018      /* RCC_APB2ENR: enable SYSCFG clock */
-    movs  r1, #1
+    ldr   r1, [r0]
+    movs  r2, #1
+    orrs  r1, r1, r2
     str   r1, [r0]
-    ldr   r0, =0x40010000      /* SYSCFG_CFGR1: MEM_MODE = main flash */
-    movs  r1, #0
+    ldr   r0, =0x40010000      /* SYSCFG_CFGR1: MEM_MODE = 3 (SRAM at 0) */
+    ldr   r1, [r0]
+    movs  r2, #3
+    orrs  r1, r1, r2
     str   r1, [r0]
 
-ApplicationStart:
     /* Copy .data from flash to RAM */
     ldr   r0, =_sdata
     ldr   r1, =_edata
