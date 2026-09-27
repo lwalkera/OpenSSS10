@@ -109,8 +109,8 @@ The application's OTA code (§8.6) writes the staging image and the marker, then
 | PB5 | Input, pull-up, EXTI5 rising | Mains zero-cross (optocoupler), one rising edge per mains cycle |
 | PB10 | Output PP, idle **high** | Tuya module reset, pulsed low 100 ms |
 | PB12 | Input, no pull; driven by bit-bang | HS6605 pin 8 single-wire data (§11.1) |
-| PB13 | AF2 | TIM1_CH1N – RGB green (probably; see §10.1) |
-| PB14 | AF2 | TIM1_CH2N – RGB blue (probably) |
+| PB13 | AF2 | TIM1_CH1N – RGB green |
+| PB14 | AF2 | TIM1_CH2N – RGB blue |
 | PB15 | AF2 | TIM1_CH3N – RGB red |
 | PF7 | Input, pull-up | Push button, active low |
 
@@ -368,10 +368,10 @@ There is **no intermediate dimming level**: the load is either fading to on or f
 |---|---|---|
 | 0 | PA7 + PB0 + PB1 (TIM3 CH2/3/4, same CCR) | 3 white LEDs |
 | 1 | PB15 (TIM1 CCR3) | RGB red |
-| 2 | PB13 (TIM1 CCR1) | RGB green (probably) — driven at 1/5 level when mask == 0b0110 |
-| 3 | PB14 (TIM1 CCR2) | RGB blue (probably) |
+| 2 | PB13 (TIM1 CCR1) | RGB green — driven at 1/5 level when mask == 0b0110 |
+| 3 | PB14 (TIM1 CCR2) | RGB blue |
 
-Normal cyan = mask `0b1100`. The PB13/PB14 = green/blue assignment is inferred from the amber (red + 1/5 green) status colour; confirm on hardware.
+Normal cyan = mask `0b1100`. The PB13 = green, PB14 = blue assignment is confirmed on hardware.
 
 ### 10.2 Brightness curve **[C]**
 Level 0–100 maps to CCR through the gamma table at 0x0800_6D00 (101 × uint16):
@@ -824,7 +824,7 @@ Entered by holding PF7 at power-up:
 | DP 107, 111, 123, 124 purpose | ? stored and reported, use not found |
 | Settings word 0 (byte 0x2000091E) | ? |
 | Exact PIR lobe logic | M; follow `@0x08003CD0–0x08003E6A` |
-| PB13 = green, PB14 = blue | M; check with the factory-test chase |
+| PB13 = green, PB14 = blue | C; confirmed on hardware |
 | Wi-Fi status 6 handling details | M |
 | PB4 wall-switch timing | M; not populated on this model |
 | HS6605 pinout other than pin 8 | ? |

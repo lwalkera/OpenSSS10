@@ -73,4 +73,3 @@ Mains is present on the board: use an isolation transformer when probing.
   idle level. Confirm with the telemetry stream in an empty room.
 - The HS6605 slot timings in `src/pir.c` are cycle counts; check them against
   the spec's 13.25 us slot with a logic analyser.
-- PB13/PB14 = green/blue is unconfirmed.

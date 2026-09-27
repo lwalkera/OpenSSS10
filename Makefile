@@ -86,8 +86,9 @@ $(BUILD)/%.o: %.s Makefile
 	@mkdir -p $(dir $@)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
+# --print-memory-usage goes to a file so `size` can show it at the end
 $(BUILD)/$(TARGET).elf: $(OBJS) $(LDSCRIPT)
-	$(CC) $(OBJS) $(LDFLAGS) -o $@
+	$(CC) $(OBJS) $(LDFLAGS) -o $@ > $(BUILD)/$(TARGET).mem
 
 # The .bin gets its OTA header (length, CRC32) patched in; the .hex is made
 # from the patched .bin so both carry a valid header.
@@ -98,8 +99,11 @@ $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf tools/mkimage.py
 $(BUILD)/$(TARGET).hex: $(BUILD)/$(TARGET).bin
 	$(OBJCOPY) -I binary -O ihex --change-addresses $(APP_BASE) $< $@
 
-size: $(BUILD)/$(TARGET).elf
-	$(SIZE) $<
+# Runs last: after the .hex and .bin are written
+size: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin
+	@$(SIZE) $<
+	@echo
+	@cat $(BUILD)/$(TARGET).mem
 
 flash: $(BUILD)/$(TARGET).hex
 	$(OPENOCD) $(OPENOCD_CFG) -c "program $< verify reset exit"
