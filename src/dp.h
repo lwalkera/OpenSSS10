@@ -79,12 +79,12 @@ typedef struct {
   uint8_t fade_out;         /* 104, 0..3 */
   uint8_t lvl_status;       /* 105 */
   uint8_t sound_thr;        /* 106, 20..100 */
-  int32_t dp107;            /* purpose unknown */
+  int32_t dp107;            /* dark threshold, light preset 0; also level source 3 */
   bool sw_after_countdown;  /* 110 */
   int32_t dp111;            /* purpose unknown, RAM only */
   uint8_t test_mode;        /* 115 */
-  int32_t dp123;            /* purpose unknown */
-  int32_t dp124;            /* purpose unknown */
+  int32_t dp123;            /* dark threshold, light preset 1 */
+  int32_t dp124;            /* dark threshold, light preset 2 */
   uint8_t light;            /* 125 */
   uint8_t sound_peak;       /* 126 */
   bool ambient;             /* 127 */

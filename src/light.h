@@ -8,7 +8,7 @@
 void light_init(void);
 void light_cb(const uint16_t *buf, uint16_t n);
 
-/* Dark threshold from the schedule's light preset (10, 20 or 100) */
+/* Dark threshold 0..100 from the schedule's light preset */
 void light_set_dark_threshold(uint8_t threshold);
 
 uint8_t light_level(void);    /* 0..100, higher = brighter */

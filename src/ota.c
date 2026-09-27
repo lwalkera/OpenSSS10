@@ -1,6 +1,7 @@
 #include "ota.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "crc32.h"
 #include "ft32f0xx.h"
@@ -51,6 +52,10 @@ static bool image_valid(void)
   if ((sp & 0x2FFE0000u) != 0x20000000u)
     return false;
   if (h->magic != IMAGE_MAGIC || h->length != expected)
+    return false;
+  /* Same product: the stock firmware's only check */
+  if (expected < PRODUCT_KEY_OFFSET + PRODUCT_KEY_LEN ||
+      memcmp(img + PRODUCT_KEY_OFFSET, product_key, PRODUCT_KEY_LEN) != 0)
     return false;
 
   /* CRC over the image with the crc field taken as zero */

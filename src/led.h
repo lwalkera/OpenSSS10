@@ -11,7 +11,7 @@
 #define LED_BLUE    0x8u   /* PB14, TIM1 CH2N */
 
 #define LED_CYAN    (LED_GREEN | LED_BLUE)
-#define LED_AMBER   (LED_RED | LED_GREEN)
+#define LED_YELLOW  (LED_RED | LED_GREEN)
 
 enum {
   LED_OFF = 0,

@@ -23,7 +23,7 @@ typedef struct {
   uint16_t autooff_s;
   uint8_t mode;
   uint8_t off_mode;
-  uint8_t preset;       /* light gate: 0 -> 10, 1 -> 20, 2 -> 100 */
+  uint8_t preset;       /* light gate: dark threshold DP 107 / 123 / 124 */
 } sched_entry_t;
 
 typedef struct {
@@ -43,9 +43,6 @@ uint16_t sched_encode(const sched_t *s, uint8_t *p);
 /* Flash slot 1 layout */
 uint32_t sched_to_words(const sched_t s[SCHED_SLOTS], uint32_t *w);
 bool sched_from_words(const uint32_t *w, uint32_t count, sched_t s[SCHED_SLOTS]);
-
-/* Dark threshold for a light preset */
-uint8_t sched_preset_threshold(uint8_t preset);
 
 /*
  * First enabled entry active at sow (seconds of week, 0 = Sunday 00:00),

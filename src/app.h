@@ -20,7 +20,7 @@ enum {
 #define LW_FACTORY       0x0020u   /* bits 4-5 = 10: steady 100 % on bits 0-3 */
 #define LW_PAIR_MASK     0x00C0u
 #define LW_PAIR_BLINK    0x0040u   /* white blink forever (pairing) */
-#define LW_PAIR_LOST     0x0080u   /* amber breathe (connection lost) */
+#define LW_PAIR_LOST     0x0080u   /* yellow breathe (connection lost) */
 #define LW_PREVIEW_MASK  0x3F00u
 #define LW_SENSOR_TEST   0x8000u   /* PB13 breathe (DP 115 waiting) */
 

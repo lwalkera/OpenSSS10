@@ -59,6 +59,25 @@ bool schedule_save(void)
   return storage_write(SLOT_SCHEDULES, words, count);
 }
 
+/*
+ * The light preset selects one of the configurable dark thresholds
+ * DP 107 / 123 / 124 (defaults 10 / 20 / 100), capped at 100. As in the stock
+ * firmware, an out-of-range preset leaves the threshold unchanged.
+ */
+static void apply_preset(uint8_t preset)
+{
+  int32_t t;
+
+  switch (preset)
+  {
+  case 0:  t = dp.dp107; break;
+  case 1:  t = dp.dp123; break;
+  case 2:  t = dp.dp124; break;
+  default: return;
+  }
+  light_set_dark_threshold((uint8_t)(t < 0 ? 0 : t > 100 ? 100 : t));
+}
+
 void schedule_reevaluate(void)
 {
   force = true;
@@ -84,7 +103,7 @@ void schedule_poll(void)
   {
     /* No valid time without the cloud: use the built-in PIR night-light */
     active = &sched_default.e[0];
-    light_set_dark_threshold(sched_preset_threshold(active->preset));
+    apply_preset(active->preset);
     last_minute = 0xFFFF;
     return;
   }
@@ -109,7 +128,7 @@ void schedule_poll(void)
 
   if (e)
   {
-    light_set_dark_threshold(sched_preset_threshold(e->preset));
+    apply_preset(e->preset);
     if (new_minute && e->mode == SCHED_MODE_ON_AT_START && minute == e->start_min)
       app_switch(true, SRC_TIMER);
   }

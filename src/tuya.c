@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "board.h"
+#include "image_header.h"
 #include "timebase.h"
 #include "tuya_frame.h"
 #include "uart.h"
@@ -13,7 +14,7 @@
 #define MODULE_RESET_MS       100
 
 static const char product_info[] =
-  "{\"p\":\"urlxtrtlq9fjkv2d\",\"v\":\"2.3.4\",\"m\":2,\"mt\":3,\"n\":0,\"low\":0}";
+  "{\"p\":\"" PRODUCT_KEY "\",\"v\":\"2.3.4\",\"m\":2,\"mt\":3,\"n\":0,\"low\":0}";
 
 enum { RX_IDLE, RX_SYNC, RX_HEADER, RX_BODY, RX_DISPATCH };
 

@@ -39,6 +39,27 @@ SECTIONS
 
   ASSERT(_evectors - _svectors == 0xC0, "vector table must be 48 words")
 
+  /* Read-only data fills the space before the product key */
+  .rodata :
+  {
+    . = ALIGN(4);
+    *(.rodata)
+    *(.rodata*)
+    . = ALIGN(4);
+    _erodata = .;
+  } >FLASH
+
+  ASSERT(_erodata <= ORIGIN(FLASH) + 0x1000, ".rodata overlaps the product key at 0x08002000")
+
+  /*
+   * Product key at image offset 0x1000. The stock firmware's OTA code only
+   * installs an image whose 16 bytes here match its own key.
+   */
+  .product_key ORIGIN(FLASH) + 0x1000 :
+  {
+    KEEP(*(.product_key))
+  } >FLASH
+
   .text :
   {
     . = ALIGN(4);
@@ -53,14 +74,6 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;
-  } >FLASH
-
-  .rodata :
-  {
-    . = ALIGN(4);
-    *(.rodata)
-    *(.rodata*)
-    . = ALIGN(4);
   } >FLASH
 
   .ARM.extab : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH

@@ -531,8 +531,8 @@ static void render_leds(void)
   }
   else if (w & LW_PAIR_LOST)
   {
-    led_set_target(dp.ambient ? ambient_level(LED_AMBER) : dp.lvl_status);
-    led_set(LED_AMBER, LED_BREATHE, 0);
+    led_set_target(dp.ambient ? ambient_level(LED_YELLOW) : dp.lvl_status);
+    led_set(LED_YELLOW, LED_BREATHE, 0);
   }
   else if ((w & 0x30) == LW_FACTORY)
   {
@@ -671,6 +671,7 @@ static void on_dp_record(uint8_t id, uint8_t type, const uint8_t *v, uint16_t le
     break;
   case DP_107:
     dp.dp107 = (int32_t)u;
+    schedule_reevaluate();   /* dark threshold of a light preset */
     mark_settings_dirty();
     dp_report(RB_107);
     break;
@@ -704,11 +705,13 @@ static void on_dp_record(uint8_t id, uint8_t type, const uint8_t *v, uint16_t le
 #endif
   case DP_123:
     dp.dp123 = (int32_t)u;
+    schedule_reevaluate();   /* dark threshold of a light preset */
     mark_settings_dirty();
     dp_report(RB_123);
     break;
   case DP_124:
     dp.dp124 = (int32_t)u;
+    schedule_reevaluate();   /* dark threshold of a light preset */
     mark_settings_dirty();
     dp_report(RB_124);
     break;

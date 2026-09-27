@@ -39,10 +39,19 @@ Optional features (`FEATURES`, each becomes `-DFEATURE_<NAME>`):
 3. `make flash` writes only the application area. The bootloader
    (`0x08000000`) and settings (`0x0800F000`) are left alone.
 
-The first install must be over SWD: the stock firmware's OTA identity check
-rejects this image. Later updates can use Tuya OTA. The image header at offset
-`0xC0` (magic `PIRS`, length, CRC-32) is verified before the install marker is
-written.
+### OTA
+
+The stock firmware installs an OTA image only if the 16 bytes at image offset
+`0x1000` match its product key. This image carries the key there
+(`0x08002000`), so the stock firmware should also accept it over Tuya OTA.
+That path is untested, so installing over SWD is the safe first step.
+
+This firmware checks more before it writes the install marker:
+- the image header at offset `0xC0` (magic `PIRS`, length, CRC-32);
+- the product key at `0x1000`.
+
+A stock image has no `PIRS` header, so this firmware won't OTA back to stock.
+Use SWD (and `make backup`) to go back.
 
 Mains is present on the board: use an isolation transformer when probing.
 

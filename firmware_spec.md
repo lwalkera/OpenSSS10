@@ -305,7 +305,7 @@ Ignored until boot finishes. The status byte is stored for display logic.
 ### 8.6 OTA (`@0x08003B18`, `@0x08003A04`, `@0x08003B70`) **[C]**
 - **Start:** reject if size > 0x6FFC. Erase 0x0800_8000–0x0800_EFFF, set expected = size, received = 0, state = 1, start a 5 s inactivity timer.
 - **Data:** accepted only if state = 1 and offset == received, and len % 4 == 0 or it's the last packet. Program 32-bit words at 0x0800_8000 + offset, padding the final partial word with 0xFF. On completion (received == size):
-  - compare 16 bytes at 0x0800_9000 (new image +0x1000) with 0x0800_2000 (running image +0x1000); this is a crude image-identity check,
+  - compare 16 bytes at 0x0800_9000 (new image +0x1000) with 0x0800_2000 (running image +0x1000). Those 16 bytes are the ASCII product key `urlxtrtlq9fjkv2d`, stored at a fixed location, so this is a product-key match check; any replacement image must carry the same key at image offset 0x1000,
   - if they match, write the marker `0x4E454C45` to 0x0800_EFFC.
 - **Poll:** when complete, wait 500 ms, then `NVIC_SystemReset()`; the bootloader installs the image. If no data arrives for 5 s, abort.
 
@@ -371,7 +371,7 @@ There is **no intermediate dimming level**: the load is either fading to on or f
 | 2 | PB13 (TIM1 CCR1) | RGB green — driven at 1/5 level when mask == 0b0110 |
 | 3 | PB14 (TIM1 CCR2) | RGB blue |
 
-Normal cyan = mask `0b1100`. The PB13 = green, PB14 = blue assignment is confirmed on hardware.
+Normal cyan = mask `0b1100` (green + blue). Status colour = mask `0b0110` = red at the gamma-corrected level plus green at 1/5 of that duty cycle; it appears **yellow** on this hardware because the green die is much brighter than the red. The colour of each pin was confirmed on hardware: DP 115 = 4 breathes PB13 alone and lights green.
 
 ### 10.2 Brightness curve **[C]**
 Level 0–100 maps to CCR through the gamma table at 0x0800_6D00 (101 × uint16):
@@ -403,7 +403,7 @@ Re-rendered when the word, DP 127 or the light level changes by ≥ 10. Checked 
 | bits 6–7 == 01 | White, blink forever at 100 % (pairing) |
 | bits 6–7 == 10/11 | Mask 0b0110 breathe at DP 105 level, or ambient level if DP 127 is on (Wi-Fi reset warning) |
 | bits 4–5 == 10 | Steady 100 % on mask = bits 0–3 (factory test) |
-| bit 15 | PB13 breathe at 100 % (DP 115 sensor test waiting) |
+| bit 15 | Green (PB13) breathe at 100 % (DP 115 sensor test waiting) |
 | otherwise | Steady, mask = bits 0–3, level = DP[101/102/105/107] selected by bits 4–5, or the ambient table if DP 127 is on |
 
 Normal words: **0x01** = white at DP 101 level, **0x1C** = cyan at DP 102 level.
@@ -525,7 +525,7 @@ L = (x < 301) ? 30*log10(x+1) : 50*log10(x/10.0 + 1);
 L = min(L, 100);                                   // higher = brighter
 ```
 Dark flag (hysteresis, `@0x080034DC`): after **5 consecutive** readings with L ≤ `dark_threshold`, set dark = 1; after 5 consecutive readings with L > threshold, set dark = 0.
-- `dark_threshold` comes from the active schedule's light preset: `{10, 20, 100}[preset]`. With 100, the room always counts as dark.
+- `dark_threshold` comes from the active schedule's light preset, which indexes the three configurable thresholds DP 107 / DP 123 / DP 124 (defaults 10 / 20 / 100). A threshold of 100 means the room always counts as dark.
 - The factory test checks that L spans more than 80 points.
 
 ### 11.6 USART2 telemetry **[C]**
@@ -550,9 +550,9 @@ Encoding inside cmd 0x06 / 0x07: `id(1) type(1) len(2, BE) value`. Types: 1 bool
 | 102 | value | rw | Cyan LED level | 0–100; 5 s preview | ✔ | 5 | C |
 | 103 | enum | rw | TRIAC fade-in | 0–3 (§9.3) | ✔ | 6 | C |
 | 104 | enum | rw | TRIAC fade-out | 0–3 | ✔ | 7 | C |
-| 105 | value | rw | Status-colour (red + green) level | 0–100; 5 s preview | ✔ | 8 | M |
+| 105 | value | rw | Status-colour (red + 1/5 green, appears yellow) level | 0–100; 5 s preview | ✔ | 8 | C |
 | 106 | value | rw | Sound threshold | 20–100 (100 = off) | ✔ | 9 | C |
-| 107 | value | rw | Unknown | stored only; level source index 3 | ✔ | 10 | ? |
+| 107 | value | rw | Dark threshold for light preset 0 | 0–100 (light level at or below = dark) | ✔ | 10 | C |
 | 108 | – | – | Not handled | | | | C |
 | 109 | string | ro | Hardware/model tag | `"CF.20"` from flash slot 2 (up to 8 chars) | slot 2 | 11 | M |
 | 110 | bool | rw | Switch state applied when the countdown ends | | – | 12 | C |
@@ -562,8 +562,8 @@ Encoding inside cmd 0x06 / 0x07: `id(1) type(1) len(2, BE) value`. Types: 1 bool
 | 114 | – | – | Not handled | | | | C |
 | 115 | enum | rw | Sensor test mode | §14.4 | – | 14 | C |
 | 116–122 | string | rw | Schedule slots 0–6 (base64) | §13.2 | slot 1 | 15–21 | C |
-| 123 | value | rw | Unknown | | ✔ | 22 | ? |
-| 124 | value | rw | Unknown | | ✔ | 23 | ? |
+| 123 | value | rw | Dark threshold for light preset 1 | 0–100 | ✔ | 22 | C |
+| 124 | value | rw | Dark threshold for light preset 2 (used by the default schedule) | 0–100 | ✔ | 23 | C |
 | 125 | value | ro | Light level 0–100 | reported each second in test mode 5 | – | 24 | C |
 | 126 | value | ro | Peak sound level of the last second | test modes 3/4 | – | 25 | C |
 | 127 | bool | rw | Ambient-adaptive LED brightness | | ✔ | 26 | C |
@@ -681,7 +681,7 @@ n × { start_hi, start_lo, end_hi, end_lo, mode, off_mode, preset, autooff_hi, a
 | start/end | minutes since midnight; end < start = overnight |
 | mode | 1 = switch on at start time; 2 = PIR-controlled while active |
 | off_mode | 1 = switch off at end time; 2 = auto-off after `autooff_s` without motion or sound |
-| preset | light gate: 0 → 10, 1 → 20, 2 → 100 (always dark enough) |
+| preset | light gate: selects the dark threshold DP 107 / 123 / 124 (defaults 10 / 20 / 100) |
 | weekday_mask | bit n = day n, day 0 = Sunday (Tuya weekday % 7) |
 
 ### 13.3 Built-in default record (0x0800_6EB0) **[C]**
@@ -693,7 +693,7 @@ Used whenever the device is **not paired** (no valid time):
 | autooff | 60 s |
 | mode | 2 (PIR) |
 | off_mode | 2 (auto-off) |
-| preset | 2 (threshold 100) |
+| preset | 2 (threshold = DP 124, default 100) |
 | enabled | 1 |
 | weekday_mask | 0x7F (every day) |
 
@@ -750,7 +750,7 @@ Supervisor states:
 |---|---|
 | 0 | When the module becomes alive (first heartbeat) → 0x16 |
 | 0x16 | If Wi-Fi status ≠ 4, start a 20 s timer → 0x17 |
-| 0x17 | Status 4 → 0x16. After 20 s: if paired, set LED bits 6–7 = 10 (amber breathing, "connection lost"); start a 600 s timer → 0x18 |
+| 0x17 | Status 4 → 0x16. After 20 s: if paired, set LED bits 6–7 = 10 (yellow breathing, "connection lost"); start a 600 s timer → 0x18 |
 | 0x18 | Status 4 → 0x16. After 600 s → reset the module (PB10 low 100 ms) → 0 |
 | 0x19 | **Enter pairing:** 5 s timer, retries = 0, LED bits 6–7 = 01 (white blink), connected = 0 → 0x1A |
 | 0x1A | After the timer: start a 180 s overall timer → 0x1B |
@@ -773,7 +773,7 @@ Observed: white blink ≈1.5 Hz for ≈3 minutes.
 |---|---|---|
 | 0 | app / timeout | Normal |
 | 1 | firmware | Result: motion detected (lamp switched on, src 2) |
-| 2 | app | PIR test: `switch(0,3)`, LED bit 15 (PB13 breathing); waits in state 5 for motion, independent of any schedule |
+| 2 | app | PIR test: `switch(0,3)`, LED bit 15 (green PB13 breathing); waits in state 5 for motion, independent of any schedule |
 | 3 | firmware | Result: sound detected; DP 126 still reported each second |
 | 4 | app | Sound test: like 2, but waits for the sound trigger; reports peak sound level (DP 126) each second |
 | 5 | app | Light meter: report DP 125 each second |
@@ -797,8 +797,8 @@ Entered by holding PF7 at power-up:
 |---|---|---|
 | 0 | white | Wi-Fi test 0x0E reports signal ≥ 60 |
 | 1 | red | PIR motion detected |
-| 2 | PB13 | sound trigger fires |
-| 3 | PB14 | light level spans > 80 |
+| 2 | green (PB13) | sound trigger fires |
+| 3 | blue (PB14) | light level spans > 80 |
 
 4. When all tests pass and PF7 is pressed: load test. Each press toggles the TRIAC and white LEDs at 100 %.
 5. On timeout: show the result and halt (state 13).
@@ -821,10 +821,9 @@ Entered by holding PF7 at power-up:
 
 | Item | Status |
 |---|---|
-| DP 107, 111, 123, 124 purpose | ? stored and reported, use not found |
+| DP 111 purpose | ? stored and reported, use not found |
 | Settings word 0 (byte 0x2000091E) | ? |
 | Exact PIR lobe logic | M; follow `@0x08003CD0–0x08003E6A` |
-| PB13 = green, PB14 = blue | C; confirmed on hardware |
 | Wi-Fi status 6 handling details | M |
 | PB4 wall-switch timing | M; not populated on this model |
 | HS6605 pinout other than pin 8 | ? |
@@ -838,7 +837,7 @@ Entered by holding PF7 at power-up:
 3. **OTA:** keep the bootloader contract (staging at 0x0800_8000, marker 0x4E454C45 at 0x0800_EFFC) or replace it. Replace the 16-byte identity check with a header + CRC32.
 4. **HS6605 timing:** the original uses calibrated busy-wait loops with interrupts disabled for the whole ~250 µs frame. The Cortex-M0 has no DWT cycle counter, so use a free-running timer for the delays, and keep the measured slot timings (≈1.1 µs low, ≈2.6 µs high, sample ≈9 µs after release, 13.25 µs per slot). Disabling interrupts for 250 µs delays TRIAC gate events by up to ≈4.5° at 50 Hz; this is acceptable, but interrupts could instead be disabled only within each slot.
 5. **Watchdog:** keep the IWDG (≈10 s); the 100 ms blocking module reset is the longest blocking call.
-6. **Product identity:** keep product key `urlxtrtlq9fjkv2d` and the DP numbers/types for compatibility with the existing Tuya cloud product and app panel.
+6. **Product identity:** keep product key `urlxtrtlq9fjkv2d` (also at image offset 0x1000 / address 0x0800_2000 if the existing OTA path must accept the image) and the DP numbers/types for compatibility with the existing Tuya cloud product and app panel.
 
 ---
 

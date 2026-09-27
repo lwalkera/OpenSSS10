@@ -124,12 +124,6 @@ bool sched_from_words(const uint32_t *w, uint32_t count, sched_t s[SCHED_SLOTS])
   return n == count;
 }
 
-uint8_t sched_preset_threshold(uint8_t preset)
-{
-  static const uint8_t thresholds[3] = { 10, 20, 100 };
-  return thresholds[preset > 2 ? 2 : preset];
-}
-
 const sched_entry_t *sched_match(const sched_t s[SCHED_SLOTS], uint32_t sow)
 {
   uint32_t day = (sow / 86400u) % 7u;

@@ -189,10 +189,6 @@ static void test_schedule_codec(void)
   CHECK_EQ(n, 4 + 18);
   sched_decode(payload, n, &t);
   CHECK(memcmp(&t, &all[3], sizeof(t)) == 0);
-
-  CHECK_EQ(sched_preset_threshold(0), 10);
-  CHECK_EQ(sched_preset_threshold(1), 20);
-  CHECK_EQ(sched_preset_threshold(2), 100);
 }
 
 static uint32_t sow(unsigned day, unsigned h, unsigned m)

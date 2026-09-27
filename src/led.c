@@ -40,8 +40,8 @@ static void apply(uint8_t mask, uint8_t level)
   TIM3->CCR3 = white;
   TIM3->CCR4 = white;
   TIM1->CCR3 = (mask & LED_RED) ? ccr : 0;
-  /* Amber status colour: green at 1/5 of the level */
-  if (mask == LED_AMBER)
+  /* Status colour: red plus green at 1/5 of the level, which looks yellow */
+  if (mask == LED_YELLOW)
     TIM1->CCR1 = gamma[level / 5];
   else
     TIM1->CCR1 = (mask & LED_GREEN) ? ccr : 0;
