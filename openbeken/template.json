@@ -1,0 +1,21 @@
+{
+  "vendor": "Tuya",
+  "bDetailed": "0",
+  "name": "TuyaMCU PIR/sound/light TRIAC switch with night light (FT32F030C8 MCU, HS6605 PIR)",
+  "model": "PIR TRIAC switch, product key urlxtrtlq9fjkv2d",
+  "chip": "BK7231N",
+  "board": "TODO",
+  "flags": "1024",
+  "keywords": [
+    "TuyaMCU",
+    "PIR",
+    "TRIAC",
+    "urlxtrtlq9fjkv2d",
+    "FT32F030",
+    "HS6605"
+  ],
+  "pins": {},
+  "command": "backlog startDriver TuyaMCU; tuyaMcu_setBaudRate 9600; tuyaMcu_defWiFiState 4; startDriver NTP; ntp_timeZoneOfs -7; setChannelType 1 Toggle; linkTuyaMCUOutputToChannel 1 bool 1; setChannelType 2 Dimmer; linkTuyaMCUOutputToChannel 101 val 2; setChannelType 3 Dimmer; linkTuyaMCUOutputToChannel 102 val 3; setChannelType 4 Toggle; linkTuyaMCUOutputToChannel 127 bool 4; setChannelType 5 TextField; linkTuyaMCUOutputToChannel 48 enum 5",
+  "image": "https://obrazki.elektroda.pl/YOUR_IMAGE.jpg",
+  "wiki": "https://www.elektroda.com/rtvforum/topic_YOUR_TOPIC.html"
+}

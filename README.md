@@ -106,6 +106,7 @@ clock. The config also works around the chip's own quirks:
 |---|---|
 | `src/` | Firmware; one module per spec section (see headers) |
 | `bridge/` | Wi-Fi UART bridge for flashing the Beken module (runs from SRAM) |
+| `openbeken/` | OpenBeken template and `autoexec.bat` for the Beken module after reflashing |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |
 | `tools/` | `mkimage.py` (OTA header), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122) |
