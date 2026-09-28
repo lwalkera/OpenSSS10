@@ -17,6 +17,11 @@
  *
  * LEDs: green = bridge running; red = module held in reset;
  * white flickers with traffic. The TRIAC gate (PB3) is held off throughout.
+ *
+ * The FT32's debug port stops responding after an OpenOCD reset until the
+ * board is power-cycled, so the bridge is started by halting whatever
+ * firmware is running rather than from reset. It therefore starts by
+ * stopping and resetting everything that firmware may have left running.
  */
 #include <stdbool.h>
 #include <stdint.h>
@@ -150,11 +155,53 @@ static void white(bool on)
   GPIOB->BSRR = on ? (3u << 16) : 3u;
 }
 
+/*
+ * Undo whatever the halted firmware left running: interrupts, DMA (which
+ * would keep writing into SRAM), timers, UARTs, the ADC and the SRAM remap.
+ * The IWDG cannot be stopped once started, so the main loop refreshes it
+ * (at most once per millisecond: see below).
+ */
+static void quiesce(void)
+{
+  NVIC->ICER[0] = 0xFFFFFFFFu;
+  NVIC->ICPR[0] = 0xFFFFFFFFu;
+  SysTick->CTRL = 0;
+
+  /* DMA has no reset bit on this part: disable its channels directly */
+  RCC->AHBENR |= RCC_AHBENR_DMA1EN;
+  DMA1_Channel1->CCR = 0;
+  DMA1_Channel2->CCR = 0;
+  DMA1_Channel3->CCR = 0;
+  DMA1_Channel4->CCR = 0;
+  DMA1_Channel5->CCR = 0;
+  DMA1->IFCR = 0x0FFFFFFFu;
+  RCC->AHBENR &= ~RCC_AHBENR_DMA1EN;
+
+  const uint32_t apb2 = RCC_APB2RSTR_SYSCFGRST | RCC_APB2RSTR_ADCRST | RCC_APB2RSTR_TIM1RST |
+                        RCC_APB2RSTR_SPI1RST | RCC_APB2RSTR_USART1RST | RCC_APB2RSTR_TIM15RST |
+                        RCC_APB2RSTR_TIM16RST | RCC_APB2RSTR_TIM17RST;
+  const uint32_t apb1 = RCC_APB1RSTR_TIM3RST | RCC_APB1RSTR_TIM6RST | RCC_APB1RSTR_TIM14RST |
+                        RCC_APB1RSTR_SPI2RST | RCC_APB1RSTR_USART2RST | RCC_APB1RSTR_I2C1RST |
+                        RCC_APB1RSTR_I2C2RST;
+  /* The vendor header's RCC_AHBRSTR_GPIOFRST is wrong (bit 18); GPIOF is bit 22 */
+  const uint32_t ahb = RCC_AHBRSTR_GPIOARST | RCC_AHBRSTR_GPIOBRST | (1u << 22);
+
+  /* Resetting SYSCFG also maps flash back to address 0 */
+  RCC->APB2RSTR |= apb2;
+  RCC->APB1RSTR |= apb1;
+  RCC->AHBRSTR |= ahb;     /* GPIOA reset returns PA13/PA14 to SWD */
+  RCC->APB2RSTR &= ~apb2;
+  RCC->APB1RSTR &= ~apb1;
+  RCC->AHBRSTR &= ~ahb;
+}
+
 /* Called from the naked entry stub, so it must survive as a real function */
 __attribute__((used, noinline))
 static void bridge_main(void)
 {
   extern uint32_t _sbss, _ebss;
+
+  quiesce();
 
   for (uint32_t *p = &_sbss; p < &_ebss; p++)
     *p = 0;
@@ -206,11 +253,22 @@ static void bridge_main(void)
   bool button_down = false;
   uint32_t button_since = 0;
   uint32_t activity_until = 0;
+  uint32_t last_refresh = 0;
 
   for (;;)
   {
     tick_poll();
-    IWDG->KR = 0xAAAA;   /* harmless if the watchdog is not running */
+
+    /*
+     * Refresh the IWDG the halted firmware may have started. The FT32 needs
+     * at least three LSI cycles (~75 us) between IWDG_KR writes, so refresh
+     * once per millisecond rather than every pass.
+     */
+    if (ms_ticks != last_refresh)
+    {
+      last_refresh = ms_ticks;
+      IWDG->KR = 0xAAAA;   /* harmless if the watchdog is not running */
+    }
 
     bool moved = false;
     moved |= usart_rx(USART2, &to_module);

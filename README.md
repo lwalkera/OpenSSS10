@@ -33,11 +33,11 @@ Optional features (`FEATURES`, each becomes `-DFEATURE_<NAME>`):
 
 1. **Run `make backup` first.** It saves the bootloader, the stock
    application and the device's settings.
-2. Check that OpenOCD sees 512-byte pages (`flash info 0`). The `stm32f0x`
-   driver may assume 1 KB pages on this part, which would erase the wrong
-   ranges. If it does, flash with pyOCD and the pack's `FT32F0xx_64.FLM`.
-3. `make flash` writes only the application area. The bootloader
-   (`0x08000000`) and settings (`0x0800F000`) are left alone.
+2. `make flash` erases and programs only the application area, verifies it,
+   and leaves the bootloader (`0x08000000`) and settings (`0x0800F000`)
+   alone, then resets into the new firmware. It uses
+   the FT32 flash commands in `openocd/ft32f0x.cfg`, not OpenOCD's STM32
+   flash driver, which would use the wrong page size on this part.
 
 ### OTA
 
@@ -60,12 +60,14 @@ Mains is present on the board: use an isolation transformer when probing.
 `bridge/bridge.c` is a small helper that runs from SRAM and forwards the
 Beken module's UART (USART1, PA9/PA10) to the diag UART (USART2, PA2/PA3),
 both at 115200 8N1. You don't have to solder to the module's pins. It never
-writes flash; power-cycle the device to get the installed firmware back.
+writes flash; reset or power-cycle the device to get the installed firmware
+back.
 
 1. Connect a 3.3 V USB-serial adapter to the diag UART: adapter RX to PA2,
    adapter TX to PA3, and GND. Keep SWD connected.
-2. `make bridge-run`. This halts the MCU straight out of reset, loads the
-   bridge into SRAM and starts it. The green LED shows it is running.
+2. `make bridge-run`. This stops the MCU at its reset vector, loads the
+   bridge into SRAM, verifies it and starts it. The green LED shows it is
+   running.
 3. Start the Beken flasher on the adapter's serial port at **115200 baud**.
    The bridge doesn't follow baud-rate changes, so if the flasher offers a
    faster transfer rate, keep it at 115200.
@@ -75,6 +77,28 @@ writes flash; power-cycle the device to get the installed firmware back.
 
 Mains is present on the board: power it from an isolated supply or an
 isolation transformer while it is open.
+
+## Debugging the FT32 with OpenOCD
+
+Use `openocd/ft32f0x.cfg` instead of `target/stm32f0x.cfg`:
+
+    openocd -f interface/cmsis-dap.cfg -f openocd/ft32f0x.cfg
+
+If the debug port stops responding ("cannot read IDR") or returns a garbled
+DPIDR, check the ground between the probe and the board first: a weak ground
+caused outages of up to a minute here. `make SWD_KHZ=100 ...` lowers the SWD
+clock. The config also works around the chip's own quirks:
+
+- **The watchdog keeps running while the core is halted.** The freeze
+  register only accepts writes while the core is halted, and the RM says
+  DBG_IWDG_STOP enables a hardware watchdog on this part, so it is never
+  set. The config refreshes the IWDG on every halt and during flash
+  operations. After `reset halt` the IWDG isn't running at all, which is why
+  the Makefile targets start that way.
+- **No flash bank is declared**, because OpenOCD's STM32 driver would use the
+  wrong page size. Use `ft32_flash_write_bin <file.bin> <address>` and
+  `ft32_flash_erase <start> <end>` instead (512-byte pages, 32-bit words).
+- **The DBGMCU clock is enabled**, so DBGMCU_IDCODE reads correctly.
 
 ## Layout
 

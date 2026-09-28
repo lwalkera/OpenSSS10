@@ -59,10 +59,15 @@ LDFLAGS  := $(ARCH) -T$(LDSCRIPT) -Wl,--gc-sections \
 OBJS     := $(addprefix $(BUILD)/,$(C_SRCS:.c=.o) $(ASM_SRCS:.s=.o))
 DEPS     := $(OBJS:.o=.d)
 
-# Flashing via OpenOCD. Check that `flash info 0` reports 512-byte pages
-# before the first flash; override OPENOCD_CFG for other probes/configs.
-OPENOCD     ?= openocd
-OPENOCD_CFG ?= -f interface/stlink.cfg -f target/stm32f0x.cfg
+# OpenOCD. Override OPENOCD_CFG for other probes.
+#
+# Every target starts from `reset halt`: the core stops at the bootloader's
+# reset vector before any firmware runs, so no watchdog or DMA is active.
+OPENOCD      ?= openocd
+# SWD clock in kHz (make SWD_KHZ=100 ...); lower it on long or noisy wiring
+SWD_KHZ      ?= 1000
+OPENOCD_CFG  ?= -f interface/cmsis-dap.cfg -c "set FT32_SWD_KHZ $(SWD_KHZ)" -f openocd/ft32f0x.cfg
+OPENOCD_HALT := -c init -c "reset halt"
 
 # Host build of the hardware-independent modules for unit tests
 HOST_CC    ?= cc
@@ -105,20 +110,26 @@ size: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin
 	@echo
 	@cat $(BUILD)/$(TARGET).mem
 
-flash: $(BUILD)/$(TARGET).hex
-	$(OPENOCD) $(OPENOCD_CFG) -c "program $< verify reset exit"
+# Uses the FT32 flash commands from openocd/ft32f0x.cfg (512-byte pages).
+# Writes only the application area, then resets into the new firmware.
+flash: $(BUILD)/$(TARGET).bin
+	$(OPENOCD) $(OPENOCD_CFG) $(OPENOCD_HALT) \
+	  -c "ft32_flash_write_bin $< $(APP_BASE)" -c "reset run" -c shutdown
 
 # Dump the whole 64 KB flash (bootloader, app, settings) before flashing
 backup:
 	@mkdir -p backup
-	$(OPENOCD) $(OPENOCD_CFG) -c "init; reset halt; dump_image backup/flash-$$(date +%Y%m%d-%H%M%S).bin 0x08000000 0x10000; exit"
+	$(OPENOCD) $(OPENOCD_CFG) $(OPENOCD_HALT) \
+	  -c "dump_image backup/flash-$$(date +%Y%m%d-%H%M%S).bin 0x08000000 0x10000" \
+	  -c resume -c shutdown
 
 tables:
 	$(PYTHON) tools/gen_tables.py > src/tables.c
 
 # Wi-Fi UART bridge (bridge/bridge.c): runs from SRAM, never touches flash.
-# bridge-run halts the MCU straight out of reset, so the installed firmware
-# never runs; power-cycle the device to get it back.
+# bridge-run stops the core at the reset vector, loads and verifies the
+# bridge, and starts it in thread mode with interrupts masked. Reset or
+# power-cycle the board to get the firmware back.
 BRIDGE := $(BUILD)/bridge/bridge.elf
 
 bridge: $(BRIDGE)
@@ -130,8 +141,15 @@ $(BRIDGE): bridge/bridge.c bridge/bridge.ld Makefile
 	  -D$(DEVICE) $(INCLUDES) -nostartfiles -nostdlib -T bridge/bridge.ld \
 	  -Wl,--gc-sections -Wl,--print-memory-usage $< -o $@
 
+# OpenOCD's work area (used by verify_image) defaults to 0x20000000, where the
+# bridge loads; move it to 0x20001000-0x200017FF, which the bridge leaves free.
 bridge-run: $(BRIDGE)
-	$(OPENOCD) $(OPENOCD_CFG) -c "init; reset halt; load_image $<; resume 0x20000000; exit"
+	$(OPENOCD) $(OPENOCD_CFG) \
+	  -c "ft32f0x.cpu configure -work-area-phys 0x20001000 -work-area-size 0x800" \
+	  $(OPENOCD_HALT) \
+	  -c "load_image $<" -c "verify_image $<" \
+	  -c "reg xpsr 0x01000000" -c "reg control 0" -c "reg primask 1" \
+	  -c "reg msp 0x20002000" -c "resume 0x20000000" -c shutdown
 
 test: $(TEST_BIN)
 	$(TEST_BIN)

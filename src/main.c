@@ -24,23 +24,39 @@ static void iwdg_start(void)
   {
   }
 
-  /* Keep the watchdog stopped while the core is halted by a debugger */
-  RCC->APB2ENR |= RCC_APB2ENR_DBGMCUEN;
-  DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_IWDG_STOP;
+  /*
+   * No DBGMCU_APB1_FZ.DBG_IWDG_STOP: on the FT32 it can only be written while
+   * halted, and the RM says it enables a hardware watchdog rather than
+   * freezing it (see openocd/ft32f0x.cfg).
+   */
 
+  /* The FT32 needs >= 3 LSI cycles (~75 us) between IWDG_KR writes */
   IWDG->KR = 0xCCCC;
+  delay_us(100);
   IWDG->KR = 0x5555;
   IWDG->PR = 6;
   IWDG->RLR = 0x618;
   while (IWDG->SR)
   {
   }
+  delay_us(100);
   IWDG->KR = 0xAAAA;
 }
 
-static inline void iwdg_refresh(void)
+/*
+ * Refresh at most every 2 ms: the FT32 needs >= 3 LSI cycles (~75 us)
+ * between IWDG_KR writes, and a main-loop pass can be much shorter.
+ * 2 ms because a 1 ms timer can expire just after it was set.
+ */
+static void iwdg_refresh(void)
 {
-  IWDG->KR = 0xAAAA;
+  static sw_timer_t next;
+
+  if (timer_expired(&next))
+  {
+    timer_set_ms(&next, 2);
+    IWDG->KR = 0xAAAA;
+  }
 }
 
 int main(void)

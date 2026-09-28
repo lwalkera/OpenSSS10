@@ -35,7 +35,8 @@ SECTIONS
     _ebss = .;
   } >RAM
 
-  ASSERT(_ebss + 0x200 <= _estack, "no room left for the stack")
+  /* 0x20001000-0x200017FF is OpenOCD's work area while loading (Makefile) */
+  ASSERT(_ebss <= 0x20001000, "bridge overlaps the OpenOCD work area")
 
   /DISCARD/ : { *(.ARM.exidx*) *(.ARM.extab*) }
 }

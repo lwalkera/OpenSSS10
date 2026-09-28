@@ -3,3 +3,4 @@ backup/
 dir.bin
 *.swp
 __pycache__/
+*.pdf
