@@ -55,11 +55,33 @@ Use SWD (and `make backup`) to go back.
 
 Mains is present on the board: use an isolation transformer when probing.
 
+## Flashing the Wi-Fi module (OpenBeken) over the diag UART
+
+`bridge/bridge.c` is a small helper that runs from SRAM and forwards the
+Beken module's UART (USART1, PA9/PA10) to the diag UART (USART2, PA2/PA3),
+both at 115200 8N1. You don't have to solder to the module's pins. It never
+writes flash; power-cycle the device to get the installed firmware back.
+
+1. Connect a 3.3 V USB-serial adapter to the diag UART: adapter RX to PA2,
+   adapter TX to PA3, and GND. Keep SWD connected.
+2. `make bridge-run`. This halts the MCU straight out of reset, loads the
+   bridge into SRAM and starts it. The green LED shows it is running.
+3. Start the Beken flasher on the adapter's serial port at **115200 baud**.
+   The bridge doesn't follow baud-rate changes, so if the flasher offers a
+   faster transfer rate, keep it at 115200.
+4. When the flasher is waiting for the chip, press the device's button. This
+   pulses the module reset line (PB10) low for 100 ms (the red LED lights) and
+   restarts the Beken into its boot ROM. The white LEDs flicker with traffic.
+
+Mains is present on the board: power it from an isolated supply or an
+isolation transformer while it is open.
+
 ## Layout
 
 | Path | Contents |
 |---|---|
 | `src/` | Firmware; one module per spec section (see headers) |
+| `bridge/` | Wi-Fi UART bridge for flashing the Beken module (runs from SRAM) |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |
 | `tools/` | `mkimage.py` (OTA header), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122) |

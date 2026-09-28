@@ -71,7 +71,7 @@ TEST_SRCS  := $(wildcard test/*.c) \
               src/sched_codec.c src/tables.c src/tuya_frame.c
 TEST_BIN   := $(BUILD)/host/run_tests
 
-.PHONY: all clean flash size backup test tables
+.PHONY: all clean flash size backup test tables bridge bridge-run
 
 all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin size
 
@@ -115,6 +115,23 @@ backup:
 
 tables:
 	$(PYTHON) tools/gen_tables.py > src/tables.c
+
+# Wi-Fi UART bridge (bridge/bridge.c): runs from SRAM, never touches flash.
+# bridge-run halts the MCU straight out of reset, so the installed firmware
+# never runs; power-cycle the device to get it back.
+BRIDGE := $(BUILD)/bridge/bridge.elf
+
+bridge: $(BRIDGE)
+
+$(BRIDGE): bridge/bridge.c bridge/bridge.ld Makefile
+	@mkdir -p $(dir $@)
+	$(CC) $(ARCH) -Os -g3 -std=gnu11 -Wall -Wextra -ffunction-sections \
+	  -ffreestanding -fno-tree-loop-distribute-patterns \
+	  -D$(DEVICE) $(INCLUDES) -nostartfiles -nostdlib -T bridge/bridge.ld \
+	  -Wl,--gc-sections -Wl,--print-memory-usage $< -o $@
+
+bridge-run: $(BRIDGE)
+	$(OPENOCD) $(OPENOCD_CFG) -c "init; reset halt; load_image $<; resume 0x20000000; exit"
 
 test: $(TEST_BIN)
 	$(TEST_BIN)
