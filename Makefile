@@ -66,7 +66,7 @@ DEPS     := $(OBJS:.o=.d)
 OPENOCD      ?= openocd
 # SWD clock in kHz (make SWD_KHZ=100 ...); lower it on long or noisy wiring
 SWD_KHZ      ?= 1000
-OPENOCD_CFG  ?= -f interface/cmsis-dap.cfg -c "set FT32_SWD_KHZ $(SWD_KHZ)" -f openocd/ft32f0x.cfg
+OPENOCD_CFG  ?= -f interface/cmsis-dap.cfg -c "set FT32_SWD_KHZ $(SWD_KHZ); set _ {}" -f openocd/ft32f0x.cfg
 OPENOCD_HALT := -c init -c "reset halt"
 
 # Host build of the hardware-independent modules for unit tests
