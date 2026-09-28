@@ -17,9 +17,13 @@ static uint8_t report_state;
 static sw_timer_t report_timer;
 static uint8_t report_buf[TUYA_MAX_DATA];
 
+/*
+ * As the stock routine at 0x080041F4: DP 1 (the lamp) is left alone, so
+ * loading defaults never changes what the load is doing; `paired` is
+ * cleared (the pairing supervisor sets it again afterwards).
+ */
 void dp_load_defaults(void)
 {
-  dp.sw = false;
   dp.countdown = 0;
   dp.pir_sens = 2;
   dp.holdoff_s = 10;
@@ -31,10 +35,12 @@ void dp_load_defaults(void)
   dp.sound_thr = 65;
   dp.dp107 = 10;
   dp.sw_after_countdown = false;
+  dp.dp111 = 0;
   dp.test_mode = 0;
   dp.dp123 = 20;
   dp.dp124 = 100;
   dp.ambient = true;
+  dp.paired = false;
 }
 
 void dp_report(unsigned bit)

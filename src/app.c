@@ -256,6 +256,7 @@ static void update_color(void)
 #ifdef FEATURE_SENSOR_TEST
 static void test_result(uint8_t result)
 {
+  timer_set_s(&app.test_timer, TEST_MODE_TIMEOUT_S);
   dp.test_mode = result;
   dp_report(RB_TEST_MODE);
   app.led_word &= (uint16_t)~LW_SENSOR_TEST;
@@ -310,14 +311,17 @@ static void load_poll(void)
 
   case LS_ARMED:
 #ifdef FEATURE_SENSOR_TEST
-    if (dp.test_mode == TEST_PIR && pir_motion())
+    /* While a test waits, only its own sensor counts (stock @0x080053D0) */
+    if (dp.test_mode == TEST_PIR)
     {
-      test_result(TEST_PIR_RESULT);
+      if (pir_motion())
+        test_result(TEST_PIR_RESULT);
       break;
     }
-    if (dp.test_mode == TEST_SOUND && sound_triggered())
+    if (dp.test_mode == TEST_SOUND)
     {
-      test_result(TEST_SOUND_RESULT);
+      if (sound_triggered())
+        test_result(TEST_SOUND_RESULT);
       break;
     }
 #endif

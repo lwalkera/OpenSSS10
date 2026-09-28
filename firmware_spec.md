@@ -572,7 +572,7 @@ Defaults (`@0x080041F4`, used on factory reset / first pairing):
 
 | DP | Default |
 |---|---|
-| 1 | off |
+| 1 | not changed (see below) |
 | 7 | 0 |
 | 48 | 2 |
 | 50 | 10 |
@@ -587,6 +587,8 @@ Defaults (`@0x080041F4`, used on factory reset / first pairing):
 | 127 | 1 |
 | Schedule slot 0 | the default record (§13.3) |
 | Schedule slots 1–6 | disabled |
+
+**[C]** The routine does not write DP 1: loading defaults (factory reset, pairing) never changes the load, which starts off only because RAM starts cleared. It also sets DP 111 = 0 and clears the paired flag, which the pairing supervisor sets again afterwards (§14.3, state 0x1D).
 
 ### 12.2 DP command processing (`@0x08004594`) **[C]**
 - Ignored until boot has finished.
@@ -737,7 +739,7 @@ void load_switch(bool on, uint8_t src) {
 | 0 | Boot | If PF7 is held → factory test (8). Otherwise run_mode = 2; if not paired → start pairing (§14.3); go to 5. |
 | 3 | Switch-off requested | `triac_set(0, DP104)`; snapshot dark flag. If the active record has mode 2: src 0 → hold-off timer DP 50 s → 4; src 3 → hold-off 3 s → 4; otherwise → 5. Update LED colour. |
 | 4 | Hold-off | Wait for the timer → 5 (LED cyan meanwhile) |
-| 5 | Off / armed | Re-render LEDs when the dark flag changes. DP 115 = 2 and motion → DP 115 = 1, `switch(1,2)`. DP 115 = 4 and sound → DP 115 = 3, `switch(1,2)`. Record mode 2 && dark && motion → `switch(1,2)`. |
+| 5 | Off / armed | Re-render LEDs when the dark flag changes. DP 115 = 2: motion → DP 115 = 1, `switch(1,2)`. DP 115 = 4: sound → DP 115 = 3, `switch(1,2)`. Otherwise: record mode 2 && dark && motion → `switch(1,2)`. **[C]** (`@0x080053D0`) While DP 115 is 2 or 4, only that test's sensor is checked; the normal PIR rule is skipped. |
 | 6 | Switch-on requested | `triac_set(1, DP103)`. If the record has off_mode 2, start the auto-off timer (`autooff_s`) → 7. Update LED colour. |
 | 7 | On | If the record has off_mode 2: motion or sound restarts the auto-off timer; on expiry → `switch(0,2)`. |
 | 8–12 | Factory test | §14.6 |
@@ -778,7 +780,7 @@ Observed: white blink ≈1.5 Hz for ≈3 minutes.
 | 4 | app | Sound test: like 2, but waits for the sound trigger; reports peak sound level (DP 126) each second |
 | 5 | app | Light meter: report DP 125 each second |
 
-Any write restarts a 900 s timeout; when it expires, DP 115 returns to 0 and LED bit 15 is cleared.
+Any write restarts a 900 s timeout; when it expires, DP 115 returns to 0 and LED bit 15 is cleared. **[C]** A test result (1 or 3) also clears LED bit 15, restarts the 900 s timeout and reports DP 115 (`@0x08005402`, `@0x08005436`).
 
 ### 14.5 Inputs **[C]**
 - **PF7 button** (`@0x08002B44`, 50 ms debounce):
