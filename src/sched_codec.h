@@ -40,7 +40,11 @@ extern const sched_t sched_default;
 void sched_decode(const uint8_t *p, uint16_t len, sched_t *s);
 uint16_t sched_encode(const sched_t *s, uint8_t *p);
 
-/* Flash slot 1 layout */
+/*
+ * Flash slot 1 layout, per slot: a header word
+ *   hdr_id << 24 | entry count << 16 | enabled << 8 | weekday_mask
+ * then two words per entry (verified against the stock image's record).
+ */
 uint32_t sched_to_words(const sched_t s[SCHED_SLOTS], uint32_t *w);
 bool sched_from_words(const uint32_t *w, uint32_t count, sched_t s[SCHED_SLOTS]);
 

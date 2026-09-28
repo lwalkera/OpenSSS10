@@ -650,12 +650,12 @@ Writing a slot: erase the slot range (512-byte steps), then program sequentially
 
 **Slot 1 – schedules:** for each of the 7 slots:
 ```
-H = hdr_id<<24 | len<<16 | enabled<<8 | weekday_mask
+H = hdr_id<<24 | n<<16 | enabled<<8 | weekday_mask
 then per entry (n entries):
   A = start_min<<16 | end_min
   B = autooff_s<<16 | (off_mode<<4 | mode)<<8 | preset
 ```
-Total count = Σ(1 + 2n).
+Total count = Σ(1 + 2n). **[C]** The second byte of H is the entry count n, not the DP payload length (4 + 9n) used in §13.2. Disabled slots are stored as H = 0. The stock default record is `0x0001017F 0x0000059F 0x003C2202`, then six zero headers.
 
 **Slot 2 – tag:** one word per character. If the slot is invalid at boot, it is written with `"CF.20"` (5 chars).
 

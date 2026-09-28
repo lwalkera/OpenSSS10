@@ -21,9 +21,8 @@ static bool started;
 void schedule_load_defaults(void)
 {
   memset(schedules, 0, sizeof(schedules));
+  /* Slots 1-6 stay all-zero (disabled, id 0), as in the stock firmware */
   schedules[0] = sched_default;
-  for (int i = 1; i < SCHED_SLOTS; i++)
-    schedules[i].hdr_id = (uint8_t)i;
   force = true;
 }
 

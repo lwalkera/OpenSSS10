@@ -178,11 +178,21 @@ static void test_schedule_codec(void)
   all[3].e[1] = (sched_entry_t){ 8 * 60, 9 * 60, 0, 1, 2, 1 };
   uint32_t count = sched_to_words(all, words);
   CHECK_EQ(count, 7 + 2 * 3);
-  CHECK_EQ(words[0], (0u << 24) | (13u << 16) | (1u << 8) | 0x7F);
+  CHECK_EQ(words[0], (0u << 24) | (1u << 16) | (1u << 8) | 0x7F);
   CHECK_EQ(words[2], (60u << 16) | (0x22u << 8) | 2);
   CHECK(sched_from_words(words, count, back));
   CHECK(memcmp(all, back, sizeof(all)) == 0);
   CHECK(!sched_from_words(words, count - 1, back));
+
+  /* The stock image's record (dir.bin, 0x0800F200) decodes to the default */
+  static const uint32_t stock[9] = { 0x0001017F, 0x0000059F, 0x003C2202, 0, 0, 0, 0, 0, 0 };
+  sched_t defaults[SCHED_SLOTS];
+  memset(defaults, 0, sizeof(defaults));
+  defaults[0] = sched_default;
+  CHECK(sched_from_words(stock, 9, back));
+  CHECK(memcmp(back, defaults, sizeof(back)) == 0);
+  CHECK_EQ(sched_to_words(defaults, words), 9);
+  CHECK(memcmp(words, stock, sizeof(stock)) == 0);
 
   /* DP payload round trip of a two-entry slot */
   n = sched_encode(&all[3], payload);

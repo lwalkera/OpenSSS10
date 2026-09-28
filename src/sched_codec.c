@@ -72,10 +72,9 @@ uint32_t sched_to_words(const sched_t s[SCHED_SLOTS], uint32_t *w)
   for (int i = 0; i < SCHED_SLOTS; i++)
   {
     const sched_t *r = &s[i];
-    uint32_t len = 4u + 9u * r->count;
-
-    w[n++] = ((uint32_t)r->hdr_id << 24) | (len << 16) | ((uint32_t)r->enabled << 8) |
-             r->weekday_mask;
+    /* The header's second byte is the entry count (not the DP payload length) */
+    w[n++] = ((uint32_t)r->hdr_id << 24) | ((uint32_t)r->count << 16) |
+             ((uint32_t)r->enabled << 8) | r->weekday_mask;
     for (uint8_t j = 0; j < r->count; j++)
     {
       const sched_entry_t *e = &r->e[j];
@@ -98,8 +97,7 @@ bool sched_from_words(const uint32_t *w, uint32_t count, sched_t s[SCHED_SLOTS])
       return false;
 
     uint32_t h = w[n++];
-    uint32_t len = (h >> 16) & 0xFF;
-    uint32_t entries = len >= 4 ? (len - 4) / 9 : 0;
+    uint32_t entries = (h >> 16) & 0xFF;
 
     if (entries > SCHED_ENTRIES || n + 2 * entries > count)
       return false;
