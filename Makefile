@@ -76,7 +76,7 @@ TEST_SRCS  := $(wildcard test/*.c) \
               src/sched_codec.c src/tables.c src/tuya_frame.c
 TEST_BIN   := $(BUILD)/host/run_tests
 
-.PHONY: all clean flash size backup test tables bridge bridge-run
+.PHONY: all clean flash size backup test tables bridge bridge-run ota
 
 all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin size
 
@@ -115,6 +115,12 @@ size: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin
 flash: $(BUILD)/$(TARGET).bin
 	$(OPENOCD) $(OPENOCD_CFG) $(OPENOCD_HALT) \
 	  -c "ft32_flash_write_bin $< $(APP_BASE)" -c "reset run" -c shutdown
+
+# Update the MCU over Wi-Fi through OpenBeken (needs its tuyaMcu_otaStart
+# command): make ota IP=192.168.0.108
+ota: $(BUILD)/$(TARGET).bin
+	@test -n "$(IP)" || { echo "usage: make ota IP=<OpenBeken address>"; exit 1; }
+	$(PYTHON) tools/ota.py $(IP) $<
 
 # Dump the whole 64 KB flash (bootloader, app, settings) before flashing
 backup:

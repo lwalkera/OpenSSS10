@@ -1,0 +1,348 @@
+From 7d628e1f4d55c77162322b3e1a01fee0a63b111d Mon Sep 17 00:00:00 2001
+From: Laine Walker-Avina <lwalkera@ieee.org>
+Date: Sun, 11 Oct 2026 21:49:45 -0700
+Subject: [PATCH 3/3] TuyaMCU OTA: send packets without blocking the quick tick
+
+On a BK7231N the first update restarted the module through the
+hardware watchdog after about 11 s. Each 0x0B packet was written with
+TuyaMCU_SendCommandWithData, whose UART_SendByte calls wait while the
+TX FIFO is full. A 263-byte packet takes about 0.27 s at 9600 baud,
+and packets go out back to back. On Beken, QuickTick runs as a timer
+callback, so this starved the rest of the system, including the web
+server and the once-a-second task that reloads the watchdog.
+
+Frames are now built in the OTA module and written a few bytes per
+tick, paced to the TuyaMCU baud rate (at most 32 bytes per tick), so
+the UART never makes the caller wait. Timeouts start once a frame has
+left the UART.
+
+While the update owns the UART (start and data packets), other
+TuyaMCU frames would interleave with a half-written packet, so the
+state machine pauses and TuyaMCU_SendCommandWithData drops frames
+with a log message. Heartbeats resume once all data is sent, so the
+MCU's restart is still seen.
+
+The self-test now checks that nothing else is sent during a transfer,
+including a tuyaMcu_sendCmd issued mid-transfer, and that heartbeats
+resume afterwards.
+---
+ src/driver/drv_tuyaMCU.c            | 23 ++++++++
+ src/driver/drv_tuyaMCU.h            |  1 +
+ src/driver/drv_tuyaMCU_ota.c        | 85 ++++++++++++++++++++++++++++-
+ src/driver/drv_tuyaMCU_ota.h        |  4 ++
+ src/selftest/selftest_tuyaMCU_ota.c | 17 +++++-
+ 5 files changed, 126 insertions(+), 4 deletions(-)
+
+diff --git a/src/driver/drv_tuyaMCU.c b/src/driver/drv_tuyaMCU.c
+index f1e9dca4..32c39af4 100644
+--- a/src/driver/drv_tuyaMCU.c
++++ b/src/driver/drv_tuyaMCU.c
+@@ -204,6 +204,10 @@ static int g_dimmerRangeMax = 100;
+ // common baud rates are 9600 bit/s and 115200 bit/s
+ static int g_baudRate = 9600;
+ 
++int TuyaMCU_GetBaudRate() {
++	return g_baudRate;
++}
++
+ // global mcu time
+ static int g_tuyaNextRequestDelay;
+ static bool g_sensorMode = 0;
+@@ -454,6 +458,15 @@ int UART_TryToGetNextTuyaPacket(byte* out, int maxSize) {
+ // append header, len, everything, checksum
+ void TuyaMCU_SendCommandWithData(byte cmdType, byte* data, int payload_len) {
+ 	int i;
++
++#if ENABLE_TUYAMCU_OTA
++	// The MCU update sends its own frames a few bytes per tick; another frame
++	// written now would be interleaved with them
++	if (TuyaMCU_OTA_OwnsUART()) {
++		addLogAdv(LOG_INFO, LOG_FEATURE_TUYAMCU, "MCU update in progress, not sending cmd %i", cmdType);
++		return;
++	}
++#endif
+ 	
+ 	byte check_sum = (0xFF + cmdType + (payload_len >> 8) + (payload_len & 0xFF));
+ 
+@@ -2611,6 +2624,11 @@ void TuyaMCU_RunFrame() {
+ 	if (timer_send > 0) {
+ 		timer_send -= g_deltaTimeMS;
+ 	}
++#if ENABLE_TUYAMCU_OTA
++	else if (TuyaMCU_OTA_OwnsUART()) {
++		// queued packets wait until the MCU update has finished sending
++	}
++#endif
+ 	else {
+ 		if (TUYAMCU_SendFromQueue()) {
+ 			timer_send = 100;
+@@ -2618,6 +2636,11 @@ void TuyaMCU_RunFrame() {
+ 	}
+ }
+ void TuyaMCU_RunEverySecond() {
++#if ENABLE_TUYAMCU_OTA
++	if (TuyaMCU_OTA_OwnsUART()) {
++		return;
++	}
++#endif
+ 	g_sensorMode = DRV_IsRunning("tmSensor");
+ 	if (g_sensorMode) {
+ 		TuyaMCU_RunStateMachine_BatteryPowered();
+diff --git a/src/driver/drv_tuyaMCU.h b/src/driver/drv_tuyaMCU.h
+index 4cdab1dc..a2e0402c 100644
+--- a/src/driver/drv_tuyaMCU.h
++++ b/src/driver/drv_tuyaMCU.h
+@@ -7,6 +7,7 @@ void TuyaMCU_Send(byte *data, int size);
+ void TuyaMCU_OnChannelChanged(int channel,int iVal);
+ void TuyaMCU_Send_RawBuffer(byte *data, int len);
+ void TuyaMCU_SendCommandWithData(byte cmdType, byte* data, int payload_len);
++int TuyaMCU_GetBaudRate();
+ bool TuyaMCU_IsChannelUsedByTuyaMCU(int channelIndex);
+ void TuyaMCU_ForcePublishChannelValues();
+ void TuyaMCU_EnableAutomaticSending(bool enable);
+diff --git a/src/driver/drv_tuyaMCU_ota.c b/src/driver/drv_tuyaMCU_ota.c
+index e1c695ca..36270d56 100644
+--- a/src/driver/drv_tuyaMCU_ota.c
++++ b/src/driver/drv_tuyaMCU_ota.c
+@@ -29,6 +29,7 @@
+ #include "drv_public.h"
+ #include "drv_tuyaMCU.h"
+ #include "drv_tuyaMCU_ota.h"
++#include "drv_uart.h"
+ 
+ #define TUYA_CMD_HEARTBEAT         0x00
+ #define TUYA_CMD_UPGRADE_START     0x0A
+@@ -41,6 +42,11 @@
+ #define OTA_MAX_RETRIES            3
+ #define OTA_REBOOT_TIMEOUT_MS      20000
+ #define OTA_MAX_PACKET_SIZE        1024
++// Frames are written a few bytes per quick tick, paced to the baud rate, so
++// the UART never makes the caller wait (QuickTick must not block: on Beken it
++// runs as a timer callback, and stalling it starves the rest of the system)
++#define OTA_MAX_BYTES_PER_TICK     32
++#define OTA_FRAME_OVERHEAD         7     // 55 AA ver cmd lenH lenL ... sum
+ 
+ typedef enum {
+ 	OTA_IDLE,
+@@ -68,6 +74,10 @@ static int g_packetSize;
+ static int g_retries;
+ static int g_timerMS;
+ static char g_message[96];
++static byte *g_frame = NULL;        // frame being written to the UART
++static int g_frameLen;
++static int g_framePos;
++static int g_txBudget;              // bytes the UART can take now, x1000
+ 
+ static void put_u32_be(byte *p, uint32_t v) {
+ 	p[0] = (byte)(v >> 24);
+@@ -85,6 +95,12 @@ static void OTA_Release() {
+ 		free(g_buffer);
+ 		g_buffer = NULL;
+ 	}
++	if (g_frame) {
++		free(g_frame);
++		g_frame = NULL;
++	}
++	g_frameLen = 0;
++	g_framePos = 0;
+ }
+ 
+ static void OTA_Finish(tuyaOtaState_t state, const char *message) {
+@@ -103,10 +119,62 @@ const char *TuyaMCU_OTA_GetStateName() {
+ 	return g_stateNames[g_state];
+ }
+ 
++bool TuyaMCU_OTA_OwnsUART() {
++	return g_state == OTA_WAIT_START || g_state == OTA_SEND || g_state == OTA_WAIT_ACK ||
++		g_framePos < g_frameLen;
++}
++
++// Build a TuyaMCU frame; OTA_PumpFrame() writes it out over the next ticks
++static void OTA_QueueFrame(byte cmd, const byte *payload, int len) {
++	int i;
++	byte sum = 0;
++
++	g_frame[0] = 0x55;
++	g_frame[1] = 0xAA;
++	g_frame[2] = 0x00;
++	g_frame[3] = cmd;
++	g_frame[4] = (byte)(len >> 8);
++	g_frame[5] = (byte)len;
++	if (len) {
++		memcpy(g_frame + 6, payload, len);
++	}
++	for (i = 0; i < 6 + len; i++) {
++		sum += g_frame[i];
++	}
++	g_frame[6 + len] = sum;
++	g_frameLen = len + OTA_FRAME_OVERHEAD;
++	g_framePos = 0;
++	g_txBudget = OTA_MAX_BYTES_PER_TICK * 1000;
++}
++
++// Write as much of the frame as the UART can take without waiting.
++// Returns true while bytes are left.
++static bool OTA_PumpFrame() {
++	int n;
++
++	if (g_framePos >= g_frameLen) {
++		return false;
++	}
++	// 10 bits per byte (8N1)
++	g_txBudget += (int)g_deltaTimeMS * TuyaMCU_GetBaudRate() / 10;
++	if (g_txBudget > OTA_MAX_BYTES_PER_TICK * 1000) {
++		g_txBudget = OTA_MAX_BYTES_PER_TICK * 1000;
++	}
++	n = g_txBudget / 1000;
++	if (n > g_frameLen - g_framePos) {
++		n = g_frameLen - g_framePos;
++	}
++	g_txBudget -= n * 1000;
++	while (n-- > 0) {
++		UART_SendByte(g_frame[g_framePos++]);
++	}
++	return g_framePos < g_frameLen;
++}
++
+ static void OTA_SendStart() {
+ 	byte payload[4];
+ 	put_u32_be(payload, g_size);
+-	TuyaMCU_SendCommandWithData(TUYA_CMD_UPGRADE_START, payload, sizeof(payload));
++	OTA_QueueFrame(TUYA_CMD_UPGRADE_START, payload, sizeof(payload));
+ 	g_timerMS = OTA_START_TIMEOUT_MS;
+ 	g_state = OTA_WAIT_START;
+ }
+@@ -122,7 +190,7 @@ static void OTA_SendPacket() {
+ 		return;
+ 	}
+ 	put_u32_be(g_buffer, g_offset);
+-	TuyaMCU_SendCommandWithData(TUYA_CMD_UPGRADE_DATA, g_buffer, 4 + n);
++	OTA_QueueFrame(TUYA_CMD_UPGRADE_DATA, g_buffer, 4 + n);
+ 	g_inFlight = n;
+ 	g_timerMS = OTA_ACK_TIMEOUT_MS;
+ 	g_state = OTA_WAIT_ACK;
+@@ -133,7 +201,7 @@ static void OTA_SendPacket() {
+ static void OTA_SendEnd() {
+ 	byte payload[4];
+ 	put_u32_be(payload, g_size);
+-	TuyaMCU_SendCommandWithData(TUYA_CMD_UPGRADE_DATA, payload, sizeof(payload));
++	OTA_QueueFrame(TUYA_CMD_UPGRADE_DATA, payload, sizeof(payload));
+ 	g_timerMS = OTA_REBOOT_TIMEOUT_MS;
+ 	g_state = OTA_WAIT_REBOOT;
+ }
+@@ -192,6 +260,10 @@ bool TuyaMCU_OTA_OnPacket(byte cmd, const byte *payload, int len) {
+ }
+ 
+ void TuyaMCU_OTA_RunFrame() {
++	// Timeouts start once the current frame has left the UART
++	if (OTA_PumpFrame()) {
++		return;
++	}
+ 	switch (g_state) {
+ 	case OTA_WAIT_START:
+ 		g_timerMS -= (int)g_deltaTimeMS;
+@@ -263,6 +335,13 @@ static commandResult_t CMD_TuyaMCU_OTA_Start(const void *context, const char *cm
+ 		return CMD_RES_ERROR;
+ 	}
+ 
++	g_frame = (byte *)malloc(OTA_FRAME_OVERHEAD + 4 + OTA_MAX_PACKET_SIZE);
++	if (g_frame == NULL) {
++		OTA_Release();
++		addLogAdv(LOG_ERROR, LOG_FEATURE_TUYAMCU, "MCU OTA: out of memory");
++		return CMD_RES_ERROR;
++	}
++
+ 	strcpy_safe(g_fileName, fname, sizeof(g_fileName));
+ 	g_offset = 0;
+ 	g_inFlight = 0;
+diff --git a/src/driver/drv_tuyaMCU_ota.h b/src/driver/drv_tuyaMCU_ota.h
+index 3f906651..5beacdd4 100644
+--- a/src/driver/drv_tuyaMCU_ota.h
++++ b/src/driver/drv_tuyaMCU_ota.h
+@@ -22,6 +22,10 @@ bool TuyaMCU_OTA_OnPacket(byte cmd, const byte *payload, int len);
+ // True while an update is being sent
+ bool TuyaMCU_OTA_IsActive();
+ 
++// True while the update needs the UART to itself (starting and sending data);
++// the TuyaMCU driver then sends nothing else and pauses its state machine
++bool TuyaMCU_OTA_OwnsUART();
++
+ // "idle", "starting", "sending", "waiting for MCU restart", "done" or "failed"
+ const char *TuyaMCU_OTA_GetStateName();
+ 
+diff --git a/src/selftest/selftest_tuyaMCU_ota.c b/src/selftest/selftest_tuyaMCU_ota.c
+index c8ed4d2a..df27313e 100644
+--- a/src/selftest/selftest_tuyaMCU_ota.c
++++ b/src/selftest/selftest_tuyaMCU_ota.c
+@@ -12,6 +12,10 @@
+ #define OTA_TEST_IMAGE_SIZE 600
+ 
+ static byte g_otaImage[OTA_TEST_IMAGE_SIZE];
++// Frames other than the one looked for, skipped by Test_OTA_PopFrame
++static int g_otaOtherFrames;
++// Enough quick ticks to send the largest packet at 9600 baud
++#define OTA_FRAMES_PER_PACKET 60
+ 
+ static void Test_OTA_WriteImage(const char *name, int size) {
+ 	lfs_file_t file;
+@@ -61,6 +65,7 @@ static int Test_OTA_PopFrame(byte cmd, byte *payload, int maxLen) {
+ 			SIM_UART_ConsumeBytes(total);
+ 			return len;
+ 		}
++		g_otaOtherFrames++;
+ 		SIM_UART_ConsumeBytes(total);
+ 	}
+ 	return -1;
+@@ -104,7 +109,7 @@ static void Test_OTA_ExpectPacket(int offset, int expectedLen) {
+ 	byte payload[4 + 1024];
+ 	int len;
+ 
+-	Sim_RunFrames(5, false);
++	Sim_RunFrames(OTA_FRAMES_PER_PACKET, false);
+ 	len = Test_OTA_PopFrame(0x0B, payload, sizeof(payload));
+ 	SELFTEST_ASSERT(len == 4 + expectedLen);
+ 	SELFTEST_ASSERT(Test_OTA_BE32(payload) == (uint32_t)offset);
+@@ -130,10 +135,12 @@ static void Test_OTA_Begin(byte sizeCode) {
+ 
+ 	CMD_ExecuteCommand("tuyaMcu_otaStart mcu.bin", 0);
+ 	SELFTEST_ASSERT_STRING(TuyaMCU_OTA_GetStateName(), "starting");
++	Sim_RunFrames(5, false);
+ 	SELFTEST_ASSERT(Test_OTA_PopFrame(0x0A, payload, sizeof(payload)) == 4);
+ 	SELFTEST_ASSERT(Test_OTA_BE32(payload) == OTA_TEST_IMAGE_SIZE);
+ 	Test_OTA_Reply(0x0A, &sizeCode, 1);
+ 	SELFTEST_ASSERT_STRING(TuyaMCU_OTA_GetStateName(), "sending");
++	g_otaOtherFrames = 0;
+ }
+ 
+ static void Test_OTA_ExpectEndMarker() {
+@@ -153,12 +160,19 @@ void Test_TuyaMCU_OTA() {
+ 	Test_OTA_Setup();
+ 	Test_OTA_Begin(0);
+ 	Test_OTA_ExpectPacket(0, 256);
++	// Other TuyaMCU traffic is held back while packets are being sent
++	CMD_ExecuteCommand("tuyaMcu_sendCmd 0x30 00", 0);
+ 	Test_OTA_Ack();
+ 	Test_OTA_ExpectPacket(256, 256);
++	Sim_RunSeconds(2.0f, false);    // no heartbeats either
+ 	Test_OTA_Ack();
+ 	Test_OTA_ExpectPacket(512, 88);
+ 	Test_OTA_Ack();
+ 	Test_OTA_ExpectEndMarker();
++	SELFTEST_ASSERT(g_otaOtherFrames == 0);
++	// Heartbeats resume, so the MCU's restart can be seen
++	Sim_RunSeconds(4.0f, false);
++	SELFTEST_ASSERT(Test_OTA_PopFrame(0x00, payload, sizeof(payload)) == 0);
+ 	// A heartbeat reply of 1 is not a restart
+ 	Test_OTA_Reply(0x00, &one, 1);
+ 	SELFTEST_ASSERT_STRING(TuyaMCU_OTA_GetStateName(), "waiting for MCU restart");
+@@ -228,6 +242,7 @@ void Test_TuyaMCU_OTA() {
+ 	// Unsupported packet size code
+ 	Test_OTA_Setup();
+ 	CMD_ExecuteCommand("tuyaMcu_otaStart mcu.bin", 0);
++	Sim_RunFrames(5, false);
+ 	SELFTEST_ASSERT(Test_OTA_PopFrame(0x0A, payload, sizeof(payload)) == 4);
+ 	payload[0] = 7;
+ 	Test_OTA_Reply(0x0A, payload, 1);
+-- 
+2.43.0
+

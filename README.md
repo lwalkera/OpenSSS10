@@ -21,6 +21,7 @@ Requires `arm-none-eabi-gcc`, `make` and `python3`.
 | `make tables` | Regenerate `src/tables.c` (sound/light lookup tables) |
 | `make backup` | Dump the full 64 KB flash with OpenOCD |
 | `make flash` | Program `build/pir-switch.hex` with OpenOCD |
+| `make ota IP=…` | Update the MCU over Wi-Fi through OpenBeken (needs the patches in `openbeken/patches/`) |
 
 Optional features (`FEATURES`, each becomes `-DFEATURE_<NAME>`):
 
