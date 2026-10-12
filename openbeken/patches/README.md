@@ -11,7 +11,9 @@ wall without SWD.
 | `0002-…` | `tuyaMcu_otaStart` / `tuyaMcu_otaAbort` / `tuyaMcu_otaStatus`, progress on the main page, and the simulator test `Test_TuyaMCU_OTA` |
 | `0003-…` | Send OTA packets without blocking the quick tick: blocking writes tripped the BK7231N's hardware watchdog. Other TuyaMCU traffic is held back during the transfer |
 
-Made against upstream commit `b19452a` (27 Sep 2026).
+Made against upstream commit `d6641ad` (5 Oct 2026). Patch 0001 is also on
+its own in the branch `tuyamcu-frame-length-fix` of
+https://github.com/lwalkera/OpenBK7231T_App, for a separate pull request.
 
 ## Build and test
 

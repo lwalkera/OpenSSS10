@@ -1,4 +1,4 @@
-From 90f15bb2d61552eb0b6b87e0109eb4630dda101c Mon Sep 17 00:00:00 2001
+From b316f27fe31b576b55178645699a422e0a8e92a3 Mon Sep 17 00:00:00 2001
 From: Laine Walker-Avina <lwalkera@ieee.org>
 Date: Sun, 11 Oct 2026 21:49:45 -0700
 Subject: [PATCH 3/3] TuyaMCU OTA: send packets without blocking the quick tick

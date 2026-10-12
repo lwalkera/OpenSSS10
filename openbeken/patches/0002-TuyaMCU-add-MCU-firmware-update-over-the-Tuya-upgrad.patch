@@ -1,4 +1,4 @@
-From 8242467a1a21152d03444f281b9bff3f49eac021 Mon Sep 17 00:00:00 2001
+From 645fcd9e3eb200a84c73522b443ba24868e80979 Mon Sep 17 00:00:00 2001
 From: Laine Walker-Avina <lwalkera@ieee.org>
 Date: Wed, 30 Sep 2026 00:36:14 -0700
 Subject: [PATCH 2/3] TuyaMCU: add MCU firmware update over the Tuya upgrade
@@ -590,7 +590,7 @@ index 00000000..3f906651
 +
 +#endif
 diff --git a/src/obk_config.h b/src/obk_config.h
-index a77d20dd..e5f929d3 100644
+index 496614c9..2d943abc 100644
 --- a/src/obk_config.h
 +++ b/src/obk_config.h
 @@ -826,6 +826,11 @@
