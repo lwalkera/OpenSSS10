@@ -1,0 +1,63 @@
+name: Firmware
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Ubuntu 24.04 ships arm-none-eabi-gcc 13.2
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
+
+      - name: Unit tests
+        run: make test
+
+      # Builds the .elf, then the .bin with the OTA header (length, CRC-32)
+      # patched in by tools/mkimage.py, and the .hex from that .bin
+      - name: Build
+        run: make
+
+      # Wi-Fi UART bridge: runs from SRAM, loaded over SWD (make bridge-run)
+      # to flash the Wi-Fi module through the debug UART
+      - name: Build utilities
+        run: make bridge
+
+      # The checks the MCU makes before installing an update (src/ota.c)
+      - name: Check OTA image
+        run: |
+          python3 - build/pir-switch.bin <<'EOF'
+          import struct, sys, zlib
+          data = open(sys.argv[1], "rb").read()
+          magic, length, crc = struct.unpack_from("<III", data, 0xC0)
+          assert magic == 0x53524950, "no PIRS header at 0xC0"
+          assert length == len(data) <= 0x6FFC, f"bad length {length} for {len(data)} bytes"
+          zeroed = data[:0xC8] + bytes(4) + data[0xCC:]
+          assert zlib.crc32(zeroed) & 0xFFFFFFFF == crc, "CRC-32 mismatch"
+          assert data[0x1000:0x1010] == b"urlxtrtlq9fjkv2d", "product key missing at 0x1000"
+          print(f"OTA image OK: {len(data)} bytes, crc32 0x{crc:08X}")
+          EOF
+
+      - name: Artifact name
+        id: name
+        run: |
+          version=$(sed -n 's/^#define FW_VERSION *"\(.*\)"/\1/p' src/dp.h)
+          echo "name=pir-switch-${version}-${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.name.outputs.name }}
+          if-no-files-found: error
+          path: |
+            build/pir-switch.bin
+            build/pir-switch.hex
+            build/pir-switch.elf
+            build/pir-switch.map
+            build/bridge/bridge.elf
