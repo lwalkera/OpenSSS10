@@ -82,11 +82,11 @@ No UART; runs from reset, SP = 0x2000_0600.
 
 1. Read word at 0x0800_8000 (staging image SP). If `(SP & 0x2FFE0000) == 0x20000000` **and** word at 0x0800_EFFC == `0x4E454C45` (bytes `E L E N`, reads "NELE" in a hex dump):
    - erase app area 0x0800_1000–0x0800_7FFF (56 pages of 512 B),
-   - copy 0x7000 bytes from 0x0800_8000 to 0x0800_1000 via a 128-byte RAM buffer,
+   - copy 0x7000 bytes from 0x0800_8000 to 0x0800_1000 via a 512-byte (128-word) RAM buffer,
    - overwrite 0x0800_EFFC with 0 (clears marker).
 2. Disable interrupts, set MSP = [0x0800_1000], jump to [0x0800_1004].
 
-The application's OTA code (§8.6) writes the staging image and the marker, then resets.
+The application's OTA code (§8.6) writes the staging image and the marker, then resets. If an erase fails, or a programmed word doesn't read back correctly, the bootloader resets and starts over; the marker stays set until the copy succeeds.
 
 ---
 
