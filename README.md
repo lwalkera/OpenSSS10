@@ -21,7 +21,7 @@ Requires `arm-none-eabi-gcc`, `make` and `python3`.
 | `make tables` | Regenerate `src/tables.c` (sound/light lookup tables) |
 | `make backup` | Dump the full 64 KB flash with OpenOCD |
 | `make flash` | Program `build/pir-switch.hex` with OpenOCD |
-| `make ota IP=…` | Update the MCU over Wi-Fi through OpenBeken (needs the patches in `openbeken/patches/`) |
+| `make ota IP=…` | Update the MCU over Wi-Fi through OpenBeken (see [Updating over Wi-Fi](#updating-over-wi-fi)) |
 
 Optional features (`FEATURES`, each becomes `-DFEATURE_<NAME>`):
 
@@ -53,6 +53,31 @@ This firmware checks more before it writes the install marker:
 
 A stock image has no `PIRS` header, so this firmware won't OTA back to stock.
 Use SWD (and `make backup`) to go back.
+
+### Updating over Wi-Fi
+
+`make ota IP=<address>` (`tools/ota.py`) uploads `build/pir-switch.bin` to
+OpenBeken's LittleFS as `mcu.bin` and starts `tuyaMcu_otaStart mcu.bin`.
+OpenBeken then sends the image to the MCU with the Tuya upgrade commands
+(0x0A/0x0B) and the script follows the progress. An update takes about a
+minute. CI artifacts can be sent the same way:
+`tools/ota.py <address> pir-switch.bin`.
+
+This needs an OpenBeken build with MCU update support (`tuyaMcu_otaStart`),
+proposed upstream in
+[OpenBK7231T_App#2246](https://github.com/openshwprojects/OpenBK7231T_App/pull/2246).
+
+OpenBeken's LittleFS must be enlarged once. The default 32 KB can't hold the
+20 KB image next to `autoexec.bat`, and running out of space crashes
+OpenBeken. Formatting erases the files, so save `autoexec.bat` first:
+
+    curl -o autoexec.bat http://<address>/api/lfs/autoexec.bat
+    curl "http://<address>/cm?cmnd=lfs_format%200x10000"
+    curl --data-binary @autoexec.bat http://<address>/api/lfs/autoexec.bat
+
+The script uploads at about 1.5 KB/s. OpenBeken writes uploads to flash at
+about 2.7 KB/s and buffers anything faster in heap; a fast upload pushes free
+heap below 25 KB, and OpenBeken reboots if it stays that low for 5 s.
 
 Mains is present on the board: use an isolation transformer when probing.
 
@@ -110,7 +135,7 @@ clock. The config also works around the chip's own quirks:
 | `openbeken/` | OpenBeken template and `autoexec.bat` for the Beken module after reflashing |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |
-| `tools/` | `mkimage.py` (OTA header), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122) |
+| `tools/` | `mkimage.py` (OTA header), `ota.py` (update over Wi-Fi), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122) |
 | `vendor/FT32F0xx_DFP/` | Unmodified FMD device pack: CMSIS headers, drivers, SVD |
 
 ## Provenance of the less obvious parts
