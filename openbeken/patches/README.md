@@ -7,7 +7,7 @@ wall without SWD.
 
 | Patch | Contents |
 |---|---|
-| `0001-…` | Fix: frames with payloads over 255 bytes failed the length check |
+| `0001-…` | Fix: the length of frames with payloads over 255 bytes lost its high byte, so such frames were split (and parts of their payload parsed as packets) or discarded |
 | `0002-…` | `tuyaMcu_otaStart` / `tuyaMcu_otaAbort` / `tuyaMcu_otaStatus`, progress on the main page, and the simulator test `Test_TuyaMCU_OTA` |
 | `0003-…` | Send OTA packets without blocking the quick tick: blocking writes tripped the BK7231N's hardware watchdog. Other TuyaMCU traffic is held back during the transfer |
 

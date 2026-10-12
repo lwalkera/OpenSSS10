@@ -1,4 +1,4 @@
-From 7d628e1f4d55c77162322b3e1a01fee0a63b111d Mon Sep 17 00:00:00 2001
+From 90f15bb2d61552eb0b6b87e0109eb4630dda101c Mon Sep 17 00:00:00 2001
 From: Laine Walker-Avina <lwalkera@ieee.org>
 Date: Sun, 11 Oct 2026 21:49:45 -0700
 Subject: [PATCH 3/3] TuyaMCU OTA: send packets without blocking the quick tick
@@ -34,7 +34,7 @@ resume afterwards.
  5 files changed, 126 insertions(+), 4 deletions(-)
 
 diff --git a/src/driver/drv_tuyaMCU.c b/src/driver/drv_tuyaMCU.c
-index f1e9dca4..32c39af4 100644
+index aa237f31..c9c96ccc 100644
 --- a/src/driver/drv_tuyaMCU.c
 +++ b/src/driver/drv_tuyaMCU.c
 @@ -204,6 +204,10 @@ static int g_dimmerRangeMax = 100;

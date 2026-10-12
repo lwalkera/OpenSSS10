@@ -1,4 +1,4 @@
-From 4e7f23938f0b003a2f8de2a58c9c82c4a4367a4a Mon Sep 17 00:00:00 2001
+From 8242467a1a21152d03444f281b9bff3f49eac021 Mon Sep 17 00:00:00 2001
 From: Laine Walker-Avina <lwalkera@ieee.org>
 Date: Wed, 30 Sep 2026 00:36:14 -0700
 Subject: [PATCH 2/3] TuyaMCU: add MCU firmware update over the Tuya upgrade
@@ -148,7 +148,7 @@ index 80efd8d8..c1af1ede 100644
  	TuyaMCU_Shutdown,                        // stopFunction
  	NULL,                                    // onChannelChanged
 diff --git a/src/driver/drv_tuyaMCU.c b/src/driver/drv_tuyaMCU.c
-index d131beda..f1e9dca4 100644
+index 08305e5a..aa237f31 100644
 --- a/src/driver/drv_tuyaMCU.c
 +++ b/src/driver/drv_tuyaMCU.c
 @@ -22,6 +22,9 @@ https://developer.tuya.com/en/docs/iot/tuyacloudlowpoweruniversalserialaccesspro
