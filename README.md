@@ -83,11 +83,11 @@ Mains is present on the board: use an isolation transformer when probing.
 
 ## Flashing the Wi-Fi module (OpenBeken) over the diag UART
 
-`bridge/bridge.c` is a small helper that runs from SRAM and forwards the
+`bridge/bridge.c` is a small helper that forwards the
 Beken module's UART (USART1, PA9/PA10) to the diag UART (USART2, PA2/PA3),
-both at 115200 8N1. You don't have to solder to the module's pins. It never
-writes flash; reset or power-cycle the device to get the installed firmware
-back.
+both at 115200 8N1. You don't have to solder to the module's pins. The
+usual build runs from SRAM and never writes flash; reset or power-cycle the
+device to get the installed firmware back.
 
 1. Connect a 3.3 V USB-serial adapter to the diag UART: adapter RX to PA2,
    adapter TX to PA3, and GND. Keep SWD connected.
@@ -100,6 +100,17 @@ back.
 4. When the flasher is waiting for the chip, press the device's button. This
    pulses the module reset line (PB10) low for 100 ms (the red LED lights) and
    restarts the Beken into its boot ROM. The white LEDs flicker with traffic.
+
+If pressing the button doesn't get the flasher talking (the Beken boot ROM
+may only listen right after a power-on), use the flash build instead:
+
+1. `make bridge-flash` writes the bridge over the firmware in the
+   application area (0x08001000). The bootloader, settings and OTA staging
+   area are untouched. From now on the bridge starts at every power-up.
+2. Start the flasher, then power-cycle the board while it waits. The Beken
+   powers up into its boot ROM with the bridge already forwarding. The
+   button still pulses the reset line.
+3. When the module is done, `make flash` puts the firmware back.
 
 Mains is present on the board: power it from an isolated supply or an
 isolation transformer while it is open.
@@ -131,7 +142,7 @@ clock. The config also works around the chip's own quirks:
 | Path | Contents |
 |---|---|
 | `src/` | Firmware; one module per spec section (see headers) |
-| `bridge/` | Wi-Fi UART bridge for flashing the Beken module (runs from SRAM) |
+| `bridge/` | Wi-Fi UART bridge for flashing the Beken module (SRAM and flash builds) |
 | `openbeken/` | OpenBeken template and `autoexec.bat` for the Beken module after reflashing |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |

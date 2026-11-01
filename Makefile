@@ -76,7 +76,7 @@ TEST_SRCS  := $(wildcard test/*.c) \
               src/sched_codec.c src/tables.c src/tuya_frame.c
 TEST_BIN   := $(BUILD)/host/run_tests
 
-.PHONY: all clean flash size backup test tables bridge bridge-run ota
+.PHONY: all clean flash size backup test tables bridge bridge-run bridge-flash ota
 
 all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin size
 
@@ -136,16 +136,27 @@ tables:
 # bridge-run stops the core at the reset vector, loads and verifies the
 # bridge, and starts it in thread mode with interrupts masked. Reset or
 # power-cycle the board to get the firmware back.
-BRIDGE := $(BUILD)/bridge/bridge.elf
+BRIDGE       := $(BUILD)/bridge/bridge.elf
+BRIDGE_FLASH := $(BUILD)/bridge/bridge-flash.elf
+BRIDGE_FLAGS := $(ARCH) -Os -g3 -std=gnu11 -Wall -Wextra -ffunction-sections \
+                -ffreestanding -fno-tree-loop-distribute-patterns \
+                -D$(DEVICE) $(INCLUDES) -nostartfiles -nostdlib \
+                -Wl,--gc-sections -Wl,--print-memory-usage
 
-bridge: $(BRIDGE)
+bridge: $(BRIDGE) $(BRIDGE_FLASH) $(BRIDGE_FLASH:.elf=.bin)
 
 $(BRIDGE): bridge/bridge.c bridge/bridge.ld Makefile
 	@mkdir -p $(dir $@)
-	$(CC) $(ARCH) -Os -g3 -std=gnu11 -Wall -Wextra -ffunction-sections \
-	  -ffreestanding -fno-tree-loop-distribute-patterns \
-	  -D$(DEVICE) $(INCLUDES) -nostartfiles -nostdlib -T bridge/bridge.ld \
-	  -Wl,--gc-sections -Wl,--print-memory-usage $< -o $@
+	$(CC) $(BRIDGE_FLAGS) -T bridge/bridge.ld $< -o $@
+
+# Flash build: replaces the firmware in the application area and starts at
+# every power-up (the Beken boot ROM only listens after a power-on)
+$(BRIDGE_FLASH): bridge/bridge.c bridge/bridge_flash.ld Makefile
+	@mkdir -p $(dir $@)
+	$(CC) $(BRIDGE_FLAGS) -DBRIDGE_FLASH -T bridge/bridge_flash.ld $< -o $@
+
+$(BRIDGE_FLASH:.elf=.bin): $(BRIDGE_FLASH)
+	$(OBJCOPY) -O binary $< $@
 
 # OpenOCD's work area (used by verify_image) defaults to 0x20000000, where the
 # bridge loads; move it to 0x20001000-0x200017FF, which the bridge leaves free.
@@ -156,6 +167,11 @@ bridge-run: $(BRIDGE)
 	  -c "load_image $<" -c "verify_image $<" \
 	  -c "reg xpsr 0x01000000" -c "reg control 0" -c "reg primask 1" \
 	  -c "reg msp 0x20002000" -c "resume 0x20000000" -c shutdown
+
+# Write the flash build over the firmware; `make flash` puts the firmware back
+bridge-flash: $(BRIDGE_FLASH:.elf=.bin)
+	$(OPENOCD) $(OPENOCD_CFG) $(OPENOCD_HALT) \
+	  -c "ft32_flash_write_bin $< $(APP_BASE)" -c "reset run" -c shutdown
 
 test: $(TEST_BIN)
 	$(TEST_BIN)

@@ -25,8 +25,9 @@ jobs:
       - name: Build
         run: make
 
-      # Wi-Fi UART bridge: runs from SRAM, loaded over SWD (make bridge-run)
-      # to flash the Wi-Fi module through the debug UART
+      # Wi-Fi UART bridge for flashing the Wi-Fi module through the debug
+      # UART: loaded into SRAM (make bridge-run) or written over the firmware
+      # (make bridge-flash)
       - name: Build utilities
         run: make bridge
 
@@ -61,3 +62,5 @@ jobs:
             build/pir-switch.elf
             build/pir-switch.map
             build/bridge/bridge.elf
+            build/bridge/bridge-flash.elf
+            build/bridge/bridge-flash.bin

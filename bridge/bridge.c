@@ -2,8 +2,15 @@
  * Wi-Fi UART bridge for flashing the Beken module (e.g. with OpenBeken)
  * without soldering.
  *
- * Loaded into SRAM over SWD by `make bridge-run`; flash is not touched, so
- * a power cycle brings back the installed firmware.
+ * Two builds of the same code:
+ *   - `make bridge-run` loads it into SRAM over SWD; flash is not touched, so
+ *     a power cycle brings back the installed firmware.
+ *   - `make bridge-flash` (BRIDGE_FLASH) writes it to the application area
+ *     (0x08001000) behind the bootloader, so it starts at every power-up.
+ *     The Beken boot ROM only listens after a power-on, so this is the build
+ *     to use when the module reset line doesn't get it there: start the
+ *     flasher, then power-cycle the board. `make flash` puts the firmware
+ *     back.
  *
  *   diag UART  USART2  PA2 TX / PA3 RX   <->  host USB-serial adapter
  *   Wi-Fi UART USART1  PA9 TX / PA10 RX  <->  Beken module
@@ -13,15 +20,16 @@
  *
  * Pressing the button (PF7) pulses the module reset line (PB10) low for
  * 100 ms so the Beken restarts into its boot ROM: start the flasher first,
- * then press the button. The module is also reset once at start-up.
+ * then press the button. The SRAM build also resets the module once at
+ * start-up; the flash build doesn't, since the module has just powered up
+ * and is already in its boot ROM.
  *
  * LEDs: green = bridge running; red = module held in reset;
  * white flickers with traffic. The TRIAC gate (PB3) is held off throughout.
  *
- * The FT32's debug port stops responding after an OpenOCD reset until the
- * board is power-cycled, so the bridge is started by halting whatever
- * firmware is running rather than from reset. It therefore starts by
- * stopping and resetting everything that firmware may have left running.
+ * The SRAM build is started by halting whatever firmware is running, so it
+ * begins by stopping and resetting everything that firmware may have left
+ * running.
  */
 #include <stdbool.h>
 #include <stdint.h>
@@ -33,6 +41,12 @@
 #define DEBOUNCE_MS     30u
 #define ACTIVITY_MS     20u
 #define QUEUE_SIZE      512u     /* power of two */
+
+#ifdef BRIDGE_FLASH
+#define START_RESET     false    /* the module has just powered up */
+#else
+#define START_RESET     true
+#endif
 
 typedef struct {
   uint8_t buf[QUEUE_SIZE];
@@ -220,8 +234,12 @@ static void bridge_main(void)
   GPIOB->BSRR = 1u << 3;
   gpio_mode(GPIOB, 3, 1);
 
-  /* Module reset (PB10), active low: assert now, released after 100 ms */
-  GPIOB->BRR = 1u << 10;
+  /* Module reset (PB10), active low: asserted now and released after
+     100 ms when START_RESET, otherwise left released */
+  if (START_RESET)
+    GPIOB->BRR = 1u << 10;
+  else
+    GPIOB->BSRR = 1u << 10;
   gpio_mode(GPIOB, 10, 1);
 
   /* LEDs as plain outputs: PB13 green, PB15 red (active high); white off */
@@ -246,10 +264,10 @@ static void bridge_main(void)
   usart_init(USART2);
 
   led(13, true);
-  led(15, true);
+  led(15, START_RESET);
 
   uint32_t reset_until = RESET_PULSE_MS;   /* start-up reset pulse */
-  bool in_reset = true;
+  bool in_reset = START_RESET;
   bool button_down = false;
   uint32_t button_since = 0;
   uint32_t activity_until = 0;
@@ -310,6 +328,40 @@ static void bridge_main(void)
   }
 }
 
+#ifdef BRIDGE_FLASH
+
+/* The bootloader jumps here with interrupts disabled and the stack pointer
+   taken from the vector table */
+extern uint32_t _sidata, _sdata, _edata, _estack;
+
+void bridge_reset(void)
+{
+  const uint32_t *src = &_sidata;
+  for (uint32_t *p = &_sdata; p < &_edata; p++)
+    *p = *src++;
+  bridge_main();
+  for (;;)
+  {
+  }
+}
+
+static void bridge_fault(void)
+{
+  for (;;)
+  {
+  }
+}
+
+/* No interrupts are used; every other vector just stops */
+__attribute__((section(".isr_vector"), used))
+static const uint32_t vectors[48] = {
+  [0] = (uint32_t)&_estack,
+  [1] = (uint32_t)bridge_reset,
+  [2 ... 47] = (uint32_t)bridge_fault,
+};
+
+#else
+
 /* Entry at 0x20000000: set up the stack, then run. Interrupts stay off. */
 __attribute__((naked, section(".entry"), used))
 void bridge_entry(void)
@@ -321,3 +373,5 @@ void bridge_entry(void)
     "bl bridge_main\n"
     "b .\n");
 }
+
+#endif
