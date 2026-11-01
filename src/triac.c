@@ -105,9 +105,15 @@ static void zc_run(uint16_t period)
   }
 
   const gate_table_t *t = &tables[active];
-  gate_off();
-  if (t->fire)
+  if (t->hold)
   {
+    gate_on();
+    ev_idx = 4;
+    TIM14->CCR1 = 0xFFFF;
+  }
+  else if (t->fire)
+  {
+    gate_off();
     ev_idx = 0;
     if (t->ev[0] == 0)
     {
@@ -118,6 +124,7 @@ static void zc_run(uint16_t period)
   }
   else
   {
+    gate_off();
     ev_idx = 4;
     TIM14->CCR1 = 0xFFFF;
   }
@@ -241,4 +248,15 @@ void triac_poll(void)
   last_period = period;
   level_dirty = false;
   table_pending = true;
+
+  /* Leaving full on: release the gate now rather than at the next edge, in
+     case the zero-cross input sees no edges while the TRIAC is held on. The
+     TRIAC conducts to the end of this half cycle, then the new table runs. */
+  if (!tables[active ^ 1].hold)
+  {
+    __disable_irq();
+    if (table_pending && tables[active].hold)
+      gate_off();
+    __enable_irq();
+  }
 }

@@ -247,10 +247,14 @@ static void test_triac(void)
   /* 50 Hz: period 2000 ticks, half 1000, 30 deg = 166 */
   triac_gate_table(&t, 2000, 1000);
   CHECK(t.fire);
+  CHECK(t.hold);
   CHECK_EQ(t.ev[0], 0);
   CHECK_EQ(t.ev[1], 917);          /* ~165 deg */
   CHECK_EQ(t.ev[2], 1000);
   CHECK_EQ(t.ev[3], 1917);
+
+  triac_gate_table(&t, 2000, 999);
+  CHECK(!t.hold);
 
   triac_gate_table(&t, 2000, 500);
   CHECK_EQ(t.ev[0], 417);

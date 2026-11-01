@@ -345,6 +345,8 @@ The TIM14 CC1 ISR walks the four events, alternately driving PB3 low (gate on, v
 
 The gate is **held on** from the firing angle to about 165°, not pulsed, so the TRIAC stays latched with low-current LED loads. PB3 is active-low.
 
+**This firmware differs at level 1000:** it holds the gate on continuously (PB3 low from the first zero-cross edge, with no release at 165°), so the TRIAC re-triggers right after every zero crossing. With the stock 165–180° release, LED fixtures blinked badly at full on. When the level drops below 1000, the gate is released at once rather than at the next edge (in case the zero-cross input sees no edges while the TRIAC is held on), and the phase-cut table above takes over from the next edge. Levels below 1000 behave as in the stock firmware.
+
 ### 9.3 Fading (`@0x080061C8`, `@0x080061B0`) **[C]**
 `triac_set(on, fade_mode)`. `level` (0–1000) is stepped **once per mains cycle**, only after the ISR has consumed the previous table, toward 1000 (on) or 0 (off):
 

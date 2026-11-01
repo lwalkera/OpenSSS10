@@ -10,11 +10,15 @@
 typedef struct {
   uint16_t ev[4];   /* gate on, off, on, off - in 10 us ticks after zero cross */
   bool fire;        /* false: keep the gate off for the whole cycle */
+  bool hold;        /* full on: gate held continuously, events unused */
 } gate_table_t;
 
 /*
  * period: mains period in 10 us ticks (one zero-cross edge per full cycle).
  * The gate is held on from the firing angle to ~165 deg of each half cycle.
+ * At full level it is held continuously instead, so the TRIAC re-triggers
+ * right after every zero crossing (the stock firmware releases it at 165 deg
+ * here too).
  */
 static inline void triac_gate_table(gate_table_t *t, uint16_t period, uint16_t level)
 {
@@ -30,6 +34,7 @@ static inline void triac_gate_table(gate_table_t *t, uint16_t period, uint16_t l
     t_on = half - ((uint32_t)level * (half - off30) / TRIAC_LEVEL_MAX + off30);
 
   t->fire = level > 0;
+  t->hold = level >= TRIAC_LEVEL_MAX;
   t->ev[0] = (uint16_t)t_on;
   t->ev[1] = (uint16_t)t_off;
   t->ev[2] = (uint16_t)(t_on + half);
