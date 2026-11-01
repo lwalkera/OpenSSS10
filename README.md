@@ -81,6 +81,24 @@ heap below 25 KB, and OpenBeken reboots if it stays that low for 5 s.
 
 Mains is present on the board: use an isolation transformer when probing.
 
+### Web app
+
+`openbeken/webapp/` replaces OpenBeken's web app ("Launch Web Application",
+`/app`) with one served from the device itself. It has three tabs:
+- **Logs:** the log, log level and features, and a console.
+- **Filesystem:** list, edit, upload, run and delete LittleFS files.
+- **SSS10:** every switch setting and the schedules, with explanations.
+
+It is plain JavaScript with no dependencies. `make webapp IP=<address>`
+(`tools/webapp.py`) uploads `startup.js` and a gzipped `app.js.gz`, about 11 KB
+together, and sets OpenBeken's WebApp URL to `/api/lfs/`. To go back to the
+stock app, set the URL to `https://openbekeniot.github.io/webapp/` under
+Config → Configure WebApp.
+
+Reading settings back needs OpenBeken flags 46 and 47 (store raw TuyaMCU
+data, for all DPs); the SSS10 tab offers to set them. Uploads from the
+Filesystem tab are not paced, so keep them small (see above).
+
 ## Flashing the Wi-Fi module (OpenBeken) over the diag UART
 
 `bridge/bridge.c` is a small helper that forwards the
@@ -143,10 +161,10 @@ clock. The config also works around the chip's own quirks:
 |---|---|
 | `src/` | Firmware; one module per spec section (see headers) |
 | `bridge/` | Wi-Fi UART bridge for flashing the Beken module (SRAM and flash builds) |
-| `openbeken/` | OpenBeken template and `autoexec.bat` for the Beken module after reflashing |
+| `openbeken/` | OpenBeken template, `autoexec.bat` and web app (`webapp/`) for the Beken module after reflashing |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |
-| `tools/` | `mkimage.py` (OTA header), `ota.py` (update over Wi-Fi), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122) |
+| `tools/` | `mkimage.py` (OTA header), `ota.py` (update over Wi-Fi), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122), `webapp.py` (install the web app) |
 | `vendor/FT32F0xx_DFP/` | Unmodified FMD device pack: CMSIS headers, drivers, SVD |
 
 ## Provenance of the less obvious parts
