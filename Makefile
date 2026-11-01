@@ -76,7 +76,7 @@ TEST_SRCS  := $(wildcard test/*.c) \
               src/sched_codec.c src/tables.c src/tuya_frame.c
 TEST_BIN   := $(BUILD)/host/run_tests
 
-.PHONY: all clean flash size backup test tables bridge bridge-run bridge-flash ota webapp
+.PHONY: all clean flash size backup test tables bridge bridge-run bridge-flash ota webapp openbeken
 
 all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).hex $(BUILD)/$(TARGET).bin size
 
@@ -121,6 +121,11 @@ flash: $(BUILD)/$(TARGET).bin
 ota: $(BUILD)/$(TARGET).bin
 	@test -n "$(IP)" || { echo "usage: make ota IP=<OpenBeken address>"; exit 1; }
 	$(PYTHON) tools/ota.py $(IP) $<
+
+# OpenBeken for the Wi-Fi module (BK7231N) with openbeken/patches applied;
+# images in build/openbeken/ (see tools/build_openbeken.sh)
+openbeken:
+	tools/build_openbeken.sh
 
 # Install the web app (openbeken/webapp) on OpenBeken's LittleFS and make it
 # the device's WebApp: make webapp IP=192.168.0.108

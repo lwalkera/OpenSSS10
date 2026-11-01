@@ -1,0 +1,4 @@
+[submodule "openbeken/OpenBK7231T_App"]
+	path = openbeken/OpenBK7231T_App
+	url = https://github.com/openshwprojects/OpenBK7231T_App.git
+	ignore = dirty

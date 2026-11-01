@@ -66,6 +66,7 @@ minute. CI artifacts can be sent the same way:
 This needs an OpenBeken build with MCU update support (`tuyaMcu_otaStart`),
 proposed upstream in
 [OpenBK7231T_App#2246](https://github.com/openshwprojects/OpenBK7231T_App/pull/2246).
+Until that is merged, `make openbeken` builds one (see below).
 
 OpenBeken's LittleFS must be enlarged once. The default 32 KB can't hold the
 20 KB image next to `autoexec.bat`, and running out of space crashes
@@ -80,6 +81,37 @@ about 2.7 KB/s and buffers anything faster in heap; a fast upload pushes free
 heap below 25 KB, and OpenBeken reboots if it stays that low for 5 s.
 
 Mains is present on the board: use an isolation transformer when probing.
+
+### Building OpenBeken
+
+`openbeken/OpenBK7231T_App` is upstream OpenBeken as a git submodule, pinned
+at the commit the patches in `openbeken/patches/` are based on:
+- `0001`: the TuyaMCU frame-length fix for payloads over 255 bytes.
+- `0002`: MCU firmware updates over the Tuya upgrade protocol
+  (`tuyaMcu_otaStart`).
+
+`make openbeken` (`tools/build_openbeken.sh`) builds the module's firmware
+(BK7231N) with them, using the SDK's bundled GCC 4.9:
+1. It applies the patches to the submodule's working tree (once; a rerun
+   sees them applied).
+2. It builds the `OpenBK7231N` target.
+3. It copies the images to `build/openbeken/`.
+
+| File | Use |
+|---|---|
+| `OpenBK7231N_<version>.rbl` | OTA update from OpenBeken's OTA page |
+| `OpenBK7231N_QIO_<version>.bin` | full flash over UART, bootloader included |
+| `OpenBK7231N_UA_<version>.bin` | UART flash of the application only |
+
+The version is `sss10_<commit>` (set `OBK_VERSION=` to override) and shows
+on OpenBeken's pages. The first build fetches the BK7231N SDK (about
+770 MB, shallow) and mbedTLS into the submodule and takes a few minutes;
+later builds take about two. The submodule's patched files and build
+output don't show as changes here (`ignore = dirty` in `.gitmodules`).
+
+To move to a newer OpenBeken, check out the new commit in the submodule,
+rebase the patches onto it, regenerate them with `git format-patch`, and
+commit the submodule and patches together.
 
 ### Web app
 
@@ -161,10 +193,10 @@ clock. The config also works around the chip's own quirks:
 |---|---|
 | `src/` | Firmware; one module per spec section (see headers) |
 | `bridge/` | Wi-Fi UART bridge for flashing the Beken module (SRAM and flash builds) |
-| `openbeken/` | OpenBeken template, `autoexec.bat` and web app (`webapp/`) for the Beken module after reflashing |
+| `openbeken/` | OpenBeken template, `autoexec.bat` and web app (`webapp/`) for the Beken module after reflashing; OpenBeken itself (`OpenBK7231T_App/`, submodule) and our patches to it (`patches/`) |
 | `startup/`, `linker/` | GCC startup (vector relocation to SRAM) and linker script |
 | `test/` | Host unit tests |
-| `tools/` | `mkimage.py` (OTA header), `ota.py` (update over Wi-Fi), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122), `webapp.py` (install the web app) |
+| `tools/` | `mkimage.py` (OTA header), `ota.py` (update over Wi-Fi), `gen_tables.py`, `sched.py` (encode/decode schedule DPs 116-122), `webapp.py` (install the web app), `build_openbeken.sh` (build OpenBeken) |
 | `vendor/FT32F0xx_DFP/` | Unmodified FMD device pack: CMSIS headers, drivers, SVD |
 
 ## Provenance of the less obvious parts
