@@ -302,6 +302,15 @@
         S(127, 'bool', 'Follow room light', 'On: the LEDs dim in a dark room (15-100% depending on the light level) ' +
           'instead of using the levels above.'),
       ]},
+      { title: 'Night-light', blurb: 'Used by schedule entries in Night-light mode: while the lamp is off, motion ' +
+          '(in a dark enough room) lights the LEDs at these levels for the entry\'s auto-off time; motion or sound keeps ' +
+          'them on. The button or app still switches the lamp as usual, and switching it off lights the night-light. ' +
+          'Set a level to 0 to leave that colour off. Changing a level shows the night-light for 5 s.', items: [
+        S(128, 'val', 'White', 'Brightness 0-100 of the white LEDs. Default 20.', { min: 0, max: 100, unit: '%' }),
+        S(129, 'val', 'Red', 'Brightness 0-100 of the red LED. Default 0.', { min: 0, max: 100, unit: '%' }),
+        S(130, 'val', 'Green', 'Brightness 0-100 of the green LED. Default 0.', { min: 0, max: 100, unit: '%' }),
+        S(131, 'val', 'Blue', 'Brightness 0-100 of the blue LED. Default 0.', { min: 0, max: 100, unit: '%' }),
+      ]},
       { title: 'Sensor test', blurb: 'Test modes for checking the sensors. A test ends by itself after 15 minutes; ' +
           'the readings below update every second while one runs.', items: [
         S(115, 'enum', 'Test mode', 'PIR test: the lamp goes off and the green LED breathes until motion is seen, then the ' +
@@ -479,15 +488,18 @@
       const touch = () => { s.dirty = true; update(); };
       const rebuild = () => { s.dirty = true; renderSlot(i); };
 
+      // The auto-off time also times the night-light
+      const usesAutooff = e => e.off == 2 || e.mode == 3;
       const rows = s.entries.map((e, ei) => {
         const autooff = h('input', { type: 'number', class: 'num', min: 0, max: 65535, value: e.autooff,
-                                     disabled: e.off != 2, oninput: () => { e.autooff = autooff.valueAsNumber || 0; touch(); } });
+                                     disabled: !usesAutooff(e), oninput: () => { e.autooff = autooff.valueAsNumber || 0; touch(); } });
         return h('tr', null,
           h('td', null, h('input', { type: 'time', value: e.start, oninput: ev => { e.start = ev.target.value; touch(); } })),
           h('td', null, h('input', { type: 'time', value: e.end, oninput: ev => { e.end = ev.target.value; touch(); } })),
-          h('td', null, select([[1, 'On at start'], [2, 'PIR controlled']], e.mode, v => { e.mode = v; touch(); })),
+          h('td', null, select([[1, 'On at start'], [2, 'PIR controlled'], [3, 'Night-light']], e.mode,
+                               v => { e.mode = v; autooff.disabled = !usesAutooff(e); touch(); })),
           h('td', null, select([[0, 'None'], [1, 'Off at end'], [2, 'Auto-off']], e.off,
-                               v => { e.off = v; autooff.disabled = v != 2; touch(); })),
+                               v => { e.off = v; autooff.disabled = !usesAutooff(e); touch(); })),
           h('td', null, autooff),
           h('td', null, select([0, 1, 2].map(p => [p, presetLabel(p)]), e.preset, v => { e.preset = v; touch(); })),
           h('td', null, h('button', { onclick: () => { s.entries.splice(ei, 1); rebuild(); } }, 'Remove')));
@@ -507,7 +519,8 @@
                 h('th', null, 'Start'),
                 h('th', { title: 'Exclusive; earlier than the start runs overnight, 00:00 runs to midnight' }, 'End'),
                 h('th', null, 'Mode'), h('th', null, 'Off'),
-                h('th', { title: 'Seconds without motion or sound before Auto-off switches the lamp off' }, 'Auto-off (s)'),
+                h('th', { title: 'Seconds without motion or sound before Auto-off switches the lamp off, ' +
+                                 'and how long the night-light stays on' }, 'Auto-off (s)'),
                 h('th', { title: 'Dark threshold the light level must be at or below' }, 'Light preset'), h('th')),
               rows)
           : h('p', { class: 'dim' }, 'No entries: the slot is disabled.'),
@@ -643,7 +656,9 @@
           'built-in schedule (slot 0\'s default: PIR all day) is used instead.'),
         h('ul', { class: 'blurb' },
           h('li', null, h('b', null, 'Mode'), ': ', h('i', null, 'On at start'), ' switches the lamp on at the start time; ',
-            h('i', null, 'PIR controlled'), ' lets motion switch it on while the entry is active and the room is dark enough.'),
+            h('i', null, 'PIR controlled'), ' lets motion switch it on while the entry is active and the room is dark enough; ',
+            h('i', null, 'Night-light'), ' instead lights the LEDs at the Night-light levels for the auto-off time, and ' +
+            'leaves the lamp to the button and app.'),
           h('li', null, h('b', null, 'Off'), ': ', h('i', null, 'Off at end'), ' switches the lamp off at the end time; ',
             h('i', null, 'Auto-off'), ' switches it off after the auto-off time without motion or sound.'),
           h('li', null, h('b', null, 'Light preset'), ': the entry only acts when the light level is at or below that ' +

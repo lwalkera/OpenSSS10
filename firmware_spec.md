@@ -410,6 +410,8 @@ Re-rendered when the word, DP 127 or the light level changes by ≥ 10. Checked 
 
 Normal words: **0x01** = white at DP 101 level, **0x1C** = cyan at DP 102 level.
 
+**This firmware only:** bit 14 selects the night-light. Each output is then lit at its own DP 128–131 level (white, red, green, blue), fading one step per 20 ms. It is checked right after the preview, so it also wins over the pairing and connection-lost effects. The bit is set while the night-light is lit (§14.2) and for 5 s after a DP 128–131 change.
+
 ### 10.5 Ambient dimming (DP 127 on) **[C]**
 | Light level L | White / other | Cyan (mask 0b1100) |
 |---|---|---|
@@ -569,6 +571,7 @@ Encoding inside cmd 0x06 / 0x07: `id(1) type(1) len(2, BE) value`. Types: 1 bool
 | 125 | value | ro | Light level 0–100 | reported each second in test mode 5 | – | 24 | C |
 | 126 | value | ro | Peak sound level of the last second | test modes 3/4 | – | 25 | C |
 | 127 | bool | rw | Ambient-adaptive LED brightness | | ✔ | 26 | C |
+| 128–131 | value | rw | **This firmware only:** night-light levels, white / red / green / blue | 0–100 each (0 = that output off); 5 s preview; defaults 20 / 0 / 0 / 0 | slot 3 | 27–30 | – |
 
 Defaults (`@0x080041F4`, used on factory reset / first pairing):
 
@@ -587,6 +590,7 @@ Defaults (`@0x080041F4`, used on factory reset / first pairing):
 | 123 | 20 |
 | 124 | 100 |
 | 127 | 1 |
+| 128–131 | 20, 0, 0, 0 (this firmware) |
 | Schedule slot 0 | the default record (§13.3) |
 | Schedule slots 1–6 | disabled |
 
@@ -621,6 +625,7 @@ Slot table (start, end):
 | 0 | 0x0800_F000–0x0800_F200 | settings |
 | 1 | 0x0800_F200–0x0800_FA00 | schedules |
 | 2 | 0x0800_FE00–0x0801_0000 | DP 109 string |
+| 3 | 0x0800_FA00–0x0800_FC00 | **This firmware only:** night-light levels (4 words: DP 128–131). Erased in the stock dumps; a missing record means the defaults. |
 
 Record layout:
 ```
@@ -683,7 +688,7 @@ n × { start_hi, start_lo, end_hi, end_lo, mode, off_mode, preset, autooff_hi, a
 | Field | Meaning |
 |---|---|
 | start/end | minutes since midnight; end < start = overnight |
-| mode | 1 = switch on at start time; 2 = PIR-controlled while active |
+| mode | 1 = switch on at start time; 2 = PIR-controlled while active; 3 = night-light (**this firmware only**, §14.2) |
 | off_mode | 1 = switch off at end time; 2 = auto-off after `autooff_s` without motion or sound |
 | preset | light gate: selects the dark threshold DP 107 / 123 / 124 (defaults 10 / 20 / 100) |
 | weekday_mask | bit n = day n, day 0 = Sunday (Tuya weekday % 7) |
@@ -744,6 +749,12 @@ void load_switch(bool on, uint8_t src) {
 | 5 | Off / armed | Re-render LEDs when the dark flag changes. DP 115 = 2: motion → DP 115 = 1, `switch(1,2)`. DP 115 = 4: sound → DP 115 = 3, `switch(1,2)`. Otherwise: record mode 2 && dark && motion → `switch(1,2)`. **[C]** (`@0x080053D0`) While DP 115 is 2 or 4, only that test's sensor is checked; the normal PIR rule is skipped. |
 | 6 | Switch-on requested | `triac_set(1, DP103)`. If the record has off_mode 2, start the auto-off timer (`autooff_s`) → 7. Update LED colour. |
 | 7 | On | If the record has off_mode 2: motion or sound restarts the auto-off timer; on expiry → `switch(0,2)`. |
+
+**Night-light, schedule mode 3 (this firmware only).** Motion never switches the load in this mode; it lights the night-light instead (LED word bit 14, §10.4).
+- **State 5 (off/armed):** motion while the dark flag is set lights the night-light for the entry's `autooff_s`. The dark flag is checked only at that moment, so the LEDs' own light can't switch it off again. While lit, motion or sound restarts the timer; on expiry it goes out.
+- **State 3 (switch-off requested):** with `src = 0` (button, app, wall switch) the night-light comes on straight away, with no hold-off. Other sources just arm.
+- **Leaving:** it goes out as soon as the load is switched on (by hand or by timer), the active entry changes to one that isn't mode 3, or a sensor test starts. With the load on, the indicator and auto-off work as in states 6 and 7.
+- **Indicator while armed and dark:** white, as for mode 2.
 | 8–12 | Factory test | §14.6 |
 | 13 | Halt | Factory test finished |
 

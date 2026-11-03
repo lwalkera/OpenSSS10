@@ -22,6 +22,7 @@ enum {
 #define LW_PAIR_BLINK    0x0040u   /* white blink forever (pairing) */
 #define LW_PAIR_LOST     0x0080u   /* yellow breathe (connection lost) */
 #define LW_PREVIEW_MASK  0x3F00u
+#define LW_NIGHTLIGHT    0x4000u   /* night-light levels (DP 128-131) */
 #define LW_SENSOR_TEST   0x8000u   /* PB13 breathe (DP 115 waiting) */
 
 void app_init(void);

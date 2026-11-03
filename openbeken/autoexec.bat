@@ -94,3 +94,18 @@ linkTuyaMCUOutputToChannel 123 val 17
 setChannelType 18 TextField
 setChannelLabel 18 Dark_threshold_2
 linkTuyaMCUOutputToChannel 124 val 18
+
+// DP 128-131 - night-light levels 0..100: white, red, green, blue
+// (new in this firmware; used by schedule entries in night-light mode)
+setChannelType 19 Dimmer
+setChannelLabel 19 Nightlight_white
+linkTuyaMCUOutputToChannel 128 val 19
+setChannelType 20 Dimmer
+setChannelLabel 20 Nightlight_red
+linkTuyaMCUOutputToChannel 129 val 20
+setChannelType 21 Dimmer
+setChannelLabel 21 Nightlight_green
+linkTuyaMCUOutputToChannel 130 val 21
+setChannelType 22 Dimmer
+setChannelLabel 22 Nightlight_blue
+linkTuyaMCUOutputToChannel 131 val 22

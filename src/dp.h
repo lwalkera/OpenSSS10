@@ -36,6 +36,11 @@
 #define DP_LIGHT           125
 #define DP_SOUND_PEAK      126
 #define DP_AMBIENT         127
+/* Night-light levels 0..100 (not in the stock firmware) */
+#define DP_NL_WHITE        128
+#define DP_NL_RED          129
+#define DP_NL_GREEN        130
+#define DP_NL_BLUE         131
 
 /* Report-dirty bits */
 enum {
@@ -60,7 +65,11 @@ enum {
   RB_LIGHT = 24,
   RB_SOUND_PEAK = 25,
   RB_AMBIENT = 26,
-  RB_COUNT = 27
+  RB_NL_WHITE = 27,      /* 27..30 = DP 128..131 */
+  RB_NL_RED = 28,
+  RB_NL_GREEN = 29,
+  RB_NL_BLUE = 30,
+  RB_COUNT = 31
 };
 
 #define RB_ALL  ((1u << RB_COUNT) - 1u)
@@ -88,6 +97,10 @@ typedef struct {
   uint8_t light;            /* 125 */
   uint8_t sound_peak;       /* 126 */
   bool ambient;             /* 127 */
+  uint8_t nl_white;         /* 128..131, night-light levels 0..100 */
+  uint8_t nl_red;
+  uint8_t nl_green;
+  uint8_t nl_blue;
 
   /* Persisted with the settings but not DPs */
   uint32_t settings_w0;     /* settings word 0, purpose unknown */

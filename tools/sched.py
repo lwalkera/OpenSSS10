@@ -20,6 +20,10 @@ Examples:
   tools/sched.py encode --slot 1 --days weekdays \\
       --entry 07:00-08:30,mode=on,off=end
 
+  # Slot 2: every night, motion lights the night-light for 2 min
+  tools/sched.py encode --slot 2 --days all \\
+      --entry 23:00-06:00,mode=night,off=auto,autooff=120
+
   # As the DP JSON a Tuya client sends: {"117": "..."}
   tools/sched.py encode --slot 1 --days mon,wed --entry 18:00-23:00,mode=on,off=end --json
 
@@ -27,10 +31,12 @@ Examples:
   tools/sched.py decode AA0BfwAABZ8CAgIAPA==
 
 Entry fields (after the time range):
-  mode=on|pir          on: switch on at the start time; pir: PIR-controlled
+  mode=on|pir|night    on: switch on at the start time; pir: PIR-controlled;
+                       night: motion lights the night-light (DPs 128-131) for
+                       `autooff` seconds; the lamp only switches by hand
   off=none|end|auto    end: switch off at the end time;
                        auto: off after `autooff` seconds without motion/sound
-  autooff=SECONDS      0..65535 (default 60)
+  autooff=SECONDS      0..65535 (default 60); also the night-light's time
   preset=0|1|2         light gate: dark threshold DP 107 / 123 / 124
                        (defaults 10 / 20 / 100; 100 = always dark enough)
 
@@ -54,7 +60,7 @@ DAY_GROUPS = {
     "none": 0x00,
 }
 
-MODES = {"on": 1, "pir": 2}
+MODES = {"on": 1, "pir": 2, "night": 3}
 OFF_MODES = {"none": 0, "end": 1, "auto": 2}
 
 

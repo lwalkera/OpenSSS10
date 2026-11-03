@@ -40,6 +40,10 @@ void dp_load_defaults(void)
   dp.dp123 = 20;
   dp.dp124 = 100;
   dp.ambient = true;
+  dp.nl_white = 20;
+  dp.nl_red = 0;
+  dp.nl_green = 0;
+  dp.nl_blue = 0;
   dp.paired = false;
 }
 
@@ -131,6 +135,10 @@ static uint16_t encode_bit(unsigned bit, uint8_t *p)
   case RB_SOUND_PEAK:   return put_value(p, DP_SOUND_PEAK, dp.sound_peak);
 #endif
   case RB_AMBIENT:      return put_u8(p, DP_AMBIENT, DP_TYPE_BOOL, dp.ambient);
+  case RB_NL_WHITE:     return put_value(p, DP_NL_WHITE, dp.nl_white);
+  case RB_NL_RED:       return put_value(p, DP_NL_RED, dp.nl_red);
+  case RB_NL_GREEN:     return put_value(p, DP_NL_GREEN, dp.nl_green);
+  case RB_NL_BLUE:      return put_value(p, DP_NL_BLUE, dp.nl_blue);
   default:
     if (bit >= RB_SCHED_FIRST && bit < RB_SCHED_FIRST + SCHED_SLOTS)
       return put_schedule(p, bit - RB_SCHED_FIRST);

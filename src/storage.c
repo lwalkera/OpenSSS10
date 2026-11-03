@@ -9,6 +9,7 @@ static const struct {
   { 0x0800F000, 0x0800F200 },
   { 0x0800F200, 0x0800FA00 },
   { 0x0800FE00, 0x08010000 },
+  { 0x0800FA00, 0x0800FC00 },
 };
 
 bool flash_erase_range(uint32_t start, uint32_t end)

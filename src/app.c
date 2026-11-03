@@ -19,6 +19,7 @@
 #include "tuya.h"
 
 #define SETTINGS_WORDS        14
+#define NIGHTLIGHT_WORDS      4
 #define SAVE_DEBOUNCE_MS      3000
 #define PREVIEW_MS            5000
 #define TEST_MODE_TIMEOUT_S   900
@@ -81,8 +82,14 @@ static struct {
   uint16_t led_word;
   sw_timer_t preview_timer;
 
+  bool nightlight;               /* lit by motion in a night-light entry */
+  sw_timer_t nl_timer;           /* entry's auto-off time without activity */
+  bool nl_preview;               /* shown for 5 s after a level change */
+  sw_timer_t nl_preview_timer;
+
   bool settings_dirty;
   bool sched_dirty;
+  bool nl_dirty;
   sw_timer_t save_timer;
 
   uint32_t last_sec;
@@ -146,6 +153,29 @@ static bool load_settings(void)
   return true;
 }
 
+/* Night-light levels: a record of their own, so slot 0 stays as in the
+   stock firmware */
+static void save_nightlight(void)
+{
+  uint32_t w[NIGHTLIGHT_WORDS] = { dp.nl_white, dp.nl_red, dp.nl_green, dp.nl_blue };
+
+  storage_write(SLOT_NIGHTLIGHT, w, NIGHTLIGHT_WORDS);
+}
+
+/* Keeps the defaults when there is no valid record */
+static void load_nightlight(void)
+{
+  uint32_t w[NIGHTLIGHT_WORDS];
+  uint32_t n;
+
+  if (!storage_read(SLOT_NIGHTLIGHT, w, NIGHTLIGHT_WORDS, &n) || n != NIGHTLIGHT_WORDS)
+    return;
+  dp.nl_white = (uint8_t)(w[0] > 100 ? 100 : w[0]);
+  dp.nl_red = (uint8_t)(w[1] > 100 ? 100 : w[1]);
+  dp.nl_green = (uint8_t)(w[2] > 100 ? 100 : w[2]);
+  dp.nl_blue = (uint8_t)(w[3] > 100 ? 100 : w[3]);
+}
+
 static void load_tag(void)
 {
   uint32_t w[TAG_MAX];
@@ -173,9 +203,11 @@ static void apply_settings(void)
 void app_save_all(void)
 {
   save_settings();
+  save_nightlight();
   schedule_save();
   app.settings_dirty = false;
   app.sched_dirty = false;
+  app.nl_dirty = false;
 }
 
 void app_load_defaults(void)
@@ -187,7 +219,7 @@ void app_load_defaults(void)
 
 static void save_poll(void)
 {
-  if (!(app.settings_dirty || app.sched_dirty) || !timer_expired(&app.save_timer))
+  if (!(app.settings_dirty || app.sched_dirty || app.nl_dirty) || !timer_expired(&app.save_timer))
     return;
   /* Don't stall the CPU on flash while Tuya traffic or a fade is running */
   if ((tuya_module_alive() && !tuya_link_idle()) || !triac_done())
@@ -197,8 +229,11 @@ static void save_poll(void)
     save_settings();
   if (app.sched_dirty)
     schedule_save();
+  if (app.nl_dirty)
+    save_nightlight();
   app.settings_dirty = false;
   app.sched_dirty = false;
+  app.nl_dirty = false;
 }
 
 void app_load(void)
@@ -207,6 +242,7 @@ void app_load(void)
     dp_load_defaults();
   if (!schedule_load())
     schedule_load_defaults();
+  load_nightlight();
   load_tag();
   apply_settings();
 }
@@ -243,7 +279,8 @@ static void update_color(void)
     set_color(LW_CYAN);
     break;
   case LS_ARMED:
-    set_color(rec && rec->mode == SCHED_MODE_PIR && light_dark() ? LW_WHITE : LW_CYAN);
+    set_color(rec && (rec->mode == SCHED_MODE_PIR || rec->mode == SCHED_MODE_NIGHT) &&
+              light_dark() ? LW_WHITE : LW_CYAN);
     break;
   case LS_ON:
     set_color(rec && rec->off_mode == SCHED_OFF_AUTO ? LW_WHITE : LW_CYAN);
@@ -263,6 +300,35 @@ static void test_result(uint8_t result)
   app_switch(true, SRC_SENSOR);
 }
 #endif
+
+/* Night-light (schedule mode 3): lit for the entry's auto-off time,
+   restarted by motion or sound; the lamp itself only switches by hand */
+static void nightlight_on(const sched_entry_t *rec)
+{
+  app.nightlight = true;
+  timer_set_s(&app.nl_timer, rec->autooff_s);
+}
+
+static void nightlight_poll(const sched_entry_t *rec)
+{
+  bool motion = pir_motion();
+
+  if (!app.nightlight)
+  {
+    /* Darkness only gates turning it on: once lit, the LEDs' own light
+       must not switch it off */
+    if (motion && light_dark())
+      nightlight_on(rec);
+  }
+  else if (motion || sound_triggered())
+  {
+    timer_set_s(&app.nl_timer, rec->autooff_s);
+  }
+  else if (timer_expired(&app.nl_timer))
+  {
+    app.nightlight = false;
+  }
+}
 
 static void load_poll(void)
 {
@@ -289,6 +355,10 @@ static void load_poll(void)
   case LS_OFF_REQ:
     triac_set(false, dp.fade_out);
     app.load_state = LS_ARMED;
+    app.nightlight = false;
+    /* Switched off by hand: the night-light lights the way out */
+    if (rec && rec->mode == SCHED_MODE_NIGHT && app.last_src == SRC_MANUAL)
+      nightlight_on(rec);
     if (rec && rec->mode == SCHED_MODE_PIR)
     {
       if (app.last_src == SRC_MANUAL)
@@ -327,6 +397,8 @@ static void load_poll(void)
 #endif
     if (rec && rec->mode == SCHED_MODE_PIR && light_dark() && pir_motion())
       app_switch(true, SRC_SENSOR);
+    else if (rec && rec->mode == SCHED_MODE_NIGHT)
+      nightlight_poll(rec);
     break;
 
   case LS_ON_REQ:
@@ -352,6 +424,10 @@ static void load_poll(void)
 #endif
     return;
   }
+
+  /* Only while the lamp is off in a night-light entry */
+  if (app.load_state != LS_ARMED || !rec || rec->mode != SCHED_MODE_NIGHT)
+    app.nightlight = false;
 
   update_color();
 }
@@ -528,6 +604,11 @@ static void render_leds(void)
     led_set_target(level_by_index((w >> 12) & 3));
     led_set((uint8_t)((w >> 8) & 0xF), LED_STEADY, 0);
   }
+  else if (w & LW_NIGHTLIGHT)
+  {
+    const uint8_t lv[LED_CH_COUNT] = { dp.nl_white, dp.nl_red, dp.nl_green, dp.nl_blue };
+    led_set_levels(lv);
+  }
   else if ((w & LW_PAIR_MASK) == LW_PAIR_BLINK)
   {
     led_set_target(100);
@@ -560,6 +641,17 @@ static void start_preview(uint16_t bits)
 {
   app.led_word = (uint16_t)((app.led_word & ~LW_PREVIEW_MASK) | bits);
   timer_set_ms(&app.preview_timer, PREVIEW_MS);
+}
+
+/* A night-light level changed: show the night-light for 5 s and save */
+static void nightlight_changed(unsigned bit)
+{
+  app.nl_preview = true;
+  timer_set_ms(&app.nl_preview_timer, PREVIEW_MS);
+  app.r_valid = false;   /* same LED word, new levels */
+  app.nl_dirty = true;
+  timer_set_ms(&app.save_timer, SAVE_DEBOUNCE_MS);
+  dp_report(bit);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -723,6 +815,22 @@ static void on_dp_record(uint8_t id, uint8_t type, const uint8_t *v, uint16_t le
     dp.ambient = u != 0;
     mark_settings_dirty();
     dp_report(RB_AMBIENT);
+    break;
+  case DP_NL_WHITE:
+    dp.nl_white = clamp_u8(u, 0, 100);
+    nightlight_changed(RB_NL_WHITE);
+    break;
+  case DP_NL_RED:
+    dp.nl_red = clamp_u8(u, 0, 100);
+    nightlight_changed(RB_NL_RED);
+    break;
+  case DP_NL_GREEN:
+    dp.nl_green = clamp_u8(u, 0, 100);
+    nightlight_changed(RB_NL_GREEN);
+    break;
+  case DP_NL_BLUE:
+    dp.nl_blue = clamp_u8(u, 0, 100);
+    nightlight_changed(RB_NL_BLUE);
     break;
   default:
     if (id >= DP_SCHED_FIRST && id <= DP_SCHED_LAST)
@@ -1052,6 +1160,8 @@ void app_poll(void)
 
   if ((app.led_word & LW_PREVIEW_MASK) && timer_expired(&app.preview_timer))
     app.led_word &= (uint16_t)~LW_PREVIEW_MASK;
+  if (app.nl_preview && timer_expired(&app.nl_preview_timer))
+    app.nl_preview = false;
 
   if (!factory)
     schedule_poll();
@@ -1064,6 +1174,14 @@ void app_poll(void)
     app.last_sec++;
     if (!factory)
       second_tick();
+  }
+
+  if (!factory)
+  {
+    if (app.nightlight || app.nl_preview)
+      app.led_word |= LW_NIGHTLIGHT;
+    else
+      app.led_word &= (uint16_t)~LW_NIGHTLIGHT;
   }
 
   render_leds();

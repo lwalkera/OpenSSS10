@@ -13,6 +13,7 @@
 /* mode */
 #define SCHED_MODE_ON_AT_START  1
 #define SCHED_MODE_PIR          2
+#define SCHED_MODE_NIGHT        3   /* motion lights the night-light; not in the stock firmware */
 /* off_mode */
 #define SCHED_OFF_AT_END        1
 #define SCHED_OFF_AUTO          2

@@ -199,6 +199,24 @@ static void test_schedule_codec(void)
   CHECK_EQ(n, 4 + 18);
   sched_decode(payload, n, &t);
   CHECK(memcmp(&t, &all[3], sizeof(t)) == 0);
+
+  /* A night-light entry (mode 3) survives both encodings; in flash, mode
+     shares a byte with off_mode */
+  memset(all, 0, sizeof(all));
+  all[1].hdr_id = 1;
+  all[1].enabled = 1;
+  all[1].weekday_mask = 0x7F;
+  all[1].count = 1;
+  all[1].e[0] = (sched_entry_t){ 21 * 60, 7 * 60, 90, SCHED_MODE_NIGHT, SCHED_OFF_AUTO, 1 };
+  count = sched_to_words(all, words);
+  CHECK_EQ(words[2], (21u * 60u << 16) | (7u * 60u));
+  CHECK_EQ(words[3], (90u << 16) | (0x23u << 8) | 1);
+  CHECK(sched_from_words(words, count, back));
+  CHECK(memcmp(all, back, sizeof(all)) == 0);
+  n = sched_encode(&all[1], payload);
+  CHECK_EQ(payload[4 + 4], SCHED_MODE_NIGHT);
+  sched_decode(payload, n, &t);
+  CHECK(memcmp(&t, &all[1], sizeof(t)) == 0);
 }
 
 static uint32_t sow(unsigned day, unsigned h, unsigned m)

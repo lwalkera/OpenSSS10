@@ -18,7 +18,11 @@ enum {
   LED_STEADY = 1,
   LED_BLINK = 2,
   LED_BREATHE = 3,
+  LED_LEVELS = 4,   /* each output at its own level (night-light) */
 };
+
+/* Index into the levels array of led_set_levels() */
+enum { LED_CH_WHITE, LED_CH_RED, LED_CH_GREEN, LED_CH_BLUE, LED_CH_COUNT };
 
 #define LED_FOREVER  0xFF
 
@@ -30,5 +34,11 @@ void led_set_target(uint8_t level);
 
 /* Select outputs and effect; count = number of blinks (LED_FOREVER = infinite) */
 void led_set(uint8_t mask, uint8_t mode, uint8_t count);
+
+/*
+ * Steady, with each output at its own level 0..100 (LED_CH_*); 0 leaves it
+ * off. Fades from what is lit now, one step per 20 ms like LED_STEADY.
+ */
+void led_set_levels(const uint8_t levels[LED_CH_COUNT]);
 
 #endif

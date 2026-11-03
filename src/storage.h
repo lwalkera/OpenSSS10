@@ -9,6 +9,7 @@ enum {
   SLOT_SETTINGS = 0,   /* 0x0800F000-0x0800F200 */
   SLOT_SCHEDULES = 1,  /* 0x0800F200-0x0800FA00 */
   SLOT_TAG = 2,        /* 0x0800FE00-0x08010000 */
+  SLOT_NIGHTLIGHT = 3, /* 0x0800FA00-0x0800FC00, not in the stock firmware */
   SLOT_COUNT
 };
 

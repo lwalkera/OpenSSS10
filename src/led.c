@@ -29,6 +29,8 @@ static struct {
   uint8_t phase;      /* blink: 1 = lit; breathe: BR_* */
   uint8_t hold;
   sw_timer_t step;
+  uint8_t ch_target[LED_CH_COUNT];   /* LED_LEVELS */
+  uint8_t ch_level[LED_CH_COUNT];
 } led;
 
 static void apply(uint8_t mask, uint8_t level)
@@ -46,6 +48,18 @@ static void apply(uint8_t mask, uint8_t level)
   else
     TIM1->CCR1 = (mask & LED_GREEN) ? ccr : 0;
   TIM1->CCR2 = (mask & LED_BLUE) ? ccr : 0;
+}
+
+static void apply_levels(const uint8_t lv[LED_CH_COUNT])
+{
+  uint16_t white = gamma[lv[LED_CH_WHITE]];
+
+  TIM3->CCR2 = white;
+  TIM3->CCR3 = white;
+  TIM3->CCR4 = white;
+  TIM1->CCR3 = gamma[lv[LED_CH_RED]];
+  TIM1->CCR1 = gamma[lv[LED_CH_GREEN]];
+  TIM1->CCR2 = gamma[lv[LED_CH_BLUE]];
 }
 
 static void pwm_init(TIM_TypeDef *tim)
@@ -94,6 +108,8 @@ void led_set(uint8_t mask, uint8_t mode, uint8_t count)
   if (mask == led.mask && mode == led.mode && count == led.count)
     return;
 
+  if (led.mode == LED_LEVELS)
+    led.level = 0;   /* fade the indicator back in after the night-light */
   led.mask = mask;
   led.mode = mode;
   led.count = count;
@@ -112,6 +128,23 @@ void led_set(uint8_t mask, uint8_t mode, uint8_t count)
   default:
     break;
   }
+}
+
+void led_set_levels(const uint8_t levels[LED_CH_COUNT])
+{
+  for (unsigned i = 0; i < LED_CH_COUNT; i++)
+    led.ch_target[i] = levels[i] > 100 ? 100 : levels[i];
+  if (led.mode == LED_LEVELS)
+    return;
+
+  /* Start from what the steady effect shows, so lit outputs don't jump */
+  static const uint8_t bits[LED_CH_COUNT] = { LED_WHITE, LED_RED, LED_GREEN, LED_BLUE };
+  for (unsigned i = 0; i < LED_CH_COUNT; i++)
+    led.ch_level[i] = (led.mode == LED_STEADY && (led.mask & bits[i])) ? led.level : 0;
+  led.mode = LED_LEVELS;
+  led.mask = 0;
+  led.count = 0;
+  timer_set_ms(&led.step, 0);
 }
 
 static void step_toward_target(void)
@@ -186,6 +219,21 @@ void led_poll(void)
       }
     }
     apply(led.mask, led.level);
+    break;
+
+  case LED_LEVELS:
+    if (timer_expired(&led.step))
+    {
+      timer_set_ms(&led.step, STEP_MS);
+      for (unsigned i = 0; i < LED_CH_COUNT; i++)
+      {
+        if (led.ch_level[i] < led.ch_target[i])
+          led.ch_level[i]++;
+        else if (led.ch_level[i] > led.ch_target[i])
+          led.ch_level[i]--;
+      }
+    }
+    apply_levels(led.ch_level);
     break;
 
   default:
