@@ -1,4 +1,4 @@
-# pir-switch
+# ELEGRP SSS10 Passive Infrared Smart Switch
 
 Replacement firmware for an FT32F030C8AT7 Tuya Wi-Fi smart switch (TRIAC
 soft-start, HS6605 PIR, sound and light sensing), written from
@@ -32,9 +32,12 @@ Optional features (`FEATURES`, each becomes `-DFEATURE_<NAME>`):
 
 ## First flash
 
-1. **Run `make backup` first.** It saves the bootloader, the stock
+1. Connect UART and SWD pins as shown here:
+   ![Pinout](img/sss10-pinout.jpg)
+	**IMPORTANT: Do not connect to UART/SWD when AC power is applied. Use external 3.3V supply when doing first flash.**
+2. **Run `make backup` first.** It saves the bootloader, the stock
    application and the device's settings.
-2. `make flash` erases and programs only the application area, verifies it,
+3. `make flash` erases and programs only the application area, verifies it,
    and leaves the bootloader (`0x08000000`) and settings (`0x0800F000`)
    alone, then resets into the new firmware. It uses
    the FT32 flash commands in `openocd/ft32f0x.cfg`, not OpenOCD's STM32
@@ -89,6 +92,14 @@ at the commit the patches in `openbeken/patches/` are based on:
 - `0001`: the TuyaMCU frame-length fix for payloads over 255 bytes.
 - `0002`: MCU firmware updates over the Tuya upgrade protocol
   (`tuyaMcu_otaStart`).
+- `0003`: daylight saving time rules (`time_setDST`) on Beken. The code is
+  upstream but switched off there for Beken. `autoexec.bat` sets them.
+
+The working tree only takes the whole series at once. After adding a patch,
+reset the submodule first (this discards changes made there):
+
+    git -C openbeken/OpenBK7231T_App checkout -- .
+    git -C openbeken/OpenBK7231T_App clean -fd src
 
 `make openbeken` (`tools/build_openbeken.sh`) builds the module's firmware
 (BK7231N) with them, using the SDK's bundled GCC 4.9:
