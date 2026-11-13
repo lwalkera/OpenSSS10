@@ -10,6 +10,7 @@
 #include "light.h"
 #include "pir.h"
 #include "sound.h"
+#include "tables.h"
 #include "timebase.h"
 #include "triac.h"
 #include "tuya.h"
@@ -18,8 +19,8 @@
 #define TEST_TIME_S       60
 #define WIFI_RETRY_S      5
 #define WIFI_MIN_SIGNAL   60
-#define LIGHT_MIN_SPAN    80
-#define SOUND_THRESHOLD   90
+#define LIGHT_MIN_SPAN    PCT_TO_LEVEL(80)
+#define SOUND_THRESHOLD   PCT_TO_LEVEL(90)
 
 /* Test bits: each LED stays lit until its test passes */
 #define PASS_WIFI   0x1u   /* white */

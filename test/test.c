@@ -9,6 +9,7 @@
 #include "pir_detect.h"
 #include "record.h"
 #include "sched_codec.h"
+#include "sound.h"
 #include "tables.h"
 #include "triac_calc.h"
 #include "tuya_frame.h"
@@ -309,26 +310,33 @@ static void test_triac(void)
   }
 }
 
+/* Stock 0..100 formula value as a 0..255 table entry */
+static int scaled_level(double l)
+{
+  int v = (int)(l * 255 / 100);
+  return v > 255 ? 255 : v;
+}
+
 static void test_tables(void)
 {
   for (int a = 0; a < SOUND_TABLE_LEN; a++)
   {
     double l = a < 20 ? 20 + 38 * log10(1 + 0.3 * a) : 57 + 50 * log10(0.4 + 0.02 * a);
-    int expect = l > 100 ? 100 : (int)l;
+    int expect = scaled_level(l);
     if (sound_level_table[a] != expect)
     {
       CHECK_EQ(sound_level_table[a], expect);
       break;
     }
   }
-  CHECK_EQ(sound_level_table[0], 20);
-  CHECK_EQ(sound_level_table[SOUND_TABLE_LEN - 1], 100);
-  CHECK(sound_level_table[SOUND_TABLE_LEN - 2] < 100);
+  CHECK_EQ(sound_level_table[0], SOUND_THR_MIN);
+  CHECK_EQ(sound_level_table[SOUND_TABLE_LEN - 1], LEVEL_MAX);
+  CHECK(sound_level_table[SOUND_TABLE_LEN - 2] < LEVEL_MAX);
 
   for (int x = 0; x < LIGHT_TABLE_LEN; x++)
   {
     double l = x < 301 ? 30 * log10(x + 1) : 50 * log10(x / 10.0 + 1);
-    int expect = l > 100 ? 100 : (int)l;
+    int expect = scaled_level(l);
     if (light_level_table[x] != expect)
     {
       CHECK_EQ(light_level_table[x], expect);
@@ -336,7 +344,20 @@ static void test_tables(void)
     }
   }
   CHECK_EQ(light_level_table[0], 0);
-  CHECK_EQ(light_level_table[1023], 100);
+  CHECK_EQ(light_level_table[1023], LEVEL_MAX);
+
+  /* Stock 0..100 values survive a trip through the 0..255 scale (slot 0
+     stores the thresholds as 0..100) */
+  for (unsigned p = 0; p <= 100; p++)
+    if (LEVEL_TO_PCT(PCT_TO_LEVEL(p)) != p)
+    {
+      CHECK_EQ(LEVEL_TO_PCT(PCT_TO_LEVEL(p)), p);
+      break;
+    }
+  CHECK_EQ(PCT_TO_LEVEL(10), 26);
+  CHECK_EQ(PCT_TO_LEVEL(20), 51);
+  CHECK_EQ(PCT_TO_LEVEL(65), SOUND_THR_DEFAULT);
+  CHECK_EQ(PCT_TO_LEVEL(100), LEVEL_MAX);
 }
 
 /* ------------------------------------------------------------------------ */

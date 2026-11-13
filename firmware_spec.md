@@ -532,6 +532,8 @@ Dark flag (hysteresis, `@0x080034DC`): after **5 consecutive** readings with L �
 - `dark_threshold` comes from the active schedule's light preset, which indexes the three configurable thresholds DP 107 / DP 123 / DP 124 (defaults 10 / 20 / 100). A threshold of 100 means the room always counts as dark.
 - The factory test checks that L spans more than 80 points.
 
+**This firmware:** internally, the sound and light levels of §11.4 and §11.5 use the full uint8 range: the same curves scaled to 0–255 (L × 255/100, truncated), precomputed in `src/tables.c` by `tools/gen_tables.py`. The DPs stay as in the stock firmware, 0–100. The thresholds (DP 106, 107, 123, 124) are scaled up (× 255/100, rounded) before the comparison, and the reports (DP 125, 126) are scaled back, rounded. The fixed thresholds (the §10.5 steps, the factory test) are scaled the same way.
+
 ### 11.6 USART2 telemetry **[C]**
 For every valid HS6605 sample (state ≥ 1), print `"<v>,<motion*100>\r\n"` in decimal (leading '-' for negative values), polled TX.
 

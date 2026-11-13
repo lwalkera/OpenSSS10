@@ -2,7 +2,7 @@
 
 #include "tables.h"
 
-static uint8_t threshold = 65;
+static uint8_t threshold = SOUND_THR_DEFAULT;
 static uint8_t level;
 static uint8_t peak;
 static bool trigger;
@@ -16,7 +16,7 @@ void sound_init(void)
 
 void sound_set_threshold(uint8_t t)
 {
-  threshold = t < 20 ? 20 : t > 100 ? 100 : t;
+  threshold = t < SOUND_THR_MIN ? SOUND_THR_MIN : t;
 }
 
 void sound_cb(const uint16_t *buf, uint16_t n)
@@ -36,11 +36,11 @@ void sound_cb(const uint16_t *buf, uint16_t n)
   }
 
   uint32_t avgdev = dev_sum / n;
-  level = avgdev < SOUND_TABLE_LEN ? sound_level_table[avgdev] : 100;
+  level = avgdev < SOUND_TABLE_LEN ? sound_level_table[avgdev] : LEVEL_MAX;
   if (level > peak)
     peak = level;
 
-  if (threshold >= 100)
+  if (threshold >= SOUND_THR_OFF)
     trigger = false;
   else
     trigger = maxdev > 500 || level >= threshold;

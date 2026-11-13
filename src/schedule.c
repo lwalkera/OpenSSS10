@@ -10,6 +10,7 @@
 #include "localtime.h"
 #include "pir.h"
 #include "storage.h"
+#include "tables.h"
 
 sched_t schedules[SCHED_SLOTS];
 
@@ -60,8 +61,9 @@ bool schedule_save(void)
 
 /*
  * The light preset selects one of the configurable dark thresholds
- * DP 107 / 123 / 124 (defaults 10 / 20 / 100), capped at 100. As in the stock
- * firmware, an out-of-range preset leaves the threshold unchanged.
+ * DP 107 / 123 / 124 (defaults 10 / 20 / 100), capped at 100. The DPs are
+ * percentages; the light level they are compared with is 0..255. As in the
+ * stock firmware, an out-of-range preset leaves the threshold unchanged.
  */
 static void apply_preset(uint8_t preset)
 {
@@ -74,7 +76,7 @@ static void apply_preset(uint8_t preset)
   case 2:  t = dp.dp124; break;
   default: return;
   }
-  light_set_dark_threshold((uint8_t)(t < 0 ? 0 : t > 100 ? 100 : t));
+  light_set_dark_threshold((uint8_t)PCT_TO_LEVEL((uint32_t)(t < 0 ? 0 : t > 100 ? 100 : t)));
 }
 
 void schedule_reevaluate(void)

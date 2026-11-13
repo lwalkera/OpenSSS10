@@ -5,10 +5,10 @@
 #define HYSTERESIS_COUNT  5
 
 static uint8_t level;
-static uint8_t dark_threshold = 100;
+static uint8_t dark_threshold = LEVEL_MAX;
 static uint8_t run;
 static bool dark;
-static uint8_t span_min = 100, span_max;
+static uint8_t span_min = LEVEL_MAX, span_max;
 
 void light_init(void)
 {
@@ -61,7 +61,7 @@ bool light_dark(void)
 
 void light_reset_span(void)
 {
-  span_min = 100;
+  span_min = LEVEL_MAX;
   span_max = 0;
 }
 

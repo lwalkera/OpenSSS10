@@ -14,6 +14,7 @@
 #include "schedule.h"
 #include "sound.h"
 #include "storage.h"
+#include "tables.h"
 #include "timebase.h"
 #include "triac.h"
 #include "tuya.h"
@@ -197,7 +198,7 @@ static void load_tag(void)
 static void apply_settings(void)
 {
   pir_set_sensitivity(dp.pir_sens);
-  sound_set_threshold(dp.sound_thr);
+  sound_set_threshold(PCT_TO_LEVEL(dp.sound_thr));   /* DP 106 is 20..100 */
 }
 
 void app_save_all(void)
@@ -573,11 +574,11 @@ static uint8_t ambient_level(uint8_t mask)
 {
   uint8_t l = light_level();
 
-  if (l < 25)
+  if (l < PCT_TO_LEVEL(25))
     return mask == LED_CYAN ? 15 : 20;
-  if (l < 35)
+  if (l < PCT_TO_LEVEL(35))
     return 50;
-  if (l < 50)
+  if (l < PCT_TO_LEVEL(50))
     return 80;
   return 100;
 }
@@ -588,7 +589,7 @@ static void render_leds(void)
   uint8_t light = light_level();
   uint8_t dlight = light > app.r_light ? light - app.r_light : app.r_light - light;
 
-  if (app.r_valid && w == app.r_word && dp.ambient == app.r_ambient && dlight < 10)
+  if (app.r_valid && w == app.r_word && dp.ambient == app.r_ambient && dlight < PCT_TO_LEVEL(10))
     return;
   app.r_valid = true;
   app.r_word = w;
@@ -676,12 +677,12 @@ static void second_tick(void)
 #ifdef FEATURE_SENSOR_TEST
   if (dp.test_mode == TEST_SOUND || dp.test_mode == TEST_SOUND_RESULT)
   {
-    dp.sound_peak = sound_take_peak();
+    dp.sound_peak = (uint8_t)LEVEL_TO_PCT(sound_take_peak());
     dp_report(RB_SOUND_PEAK);
   }
   if (dp.test_mode == TEST_LIGHT)
   {
-    dp.light = light_level();
+    dp.light = (uint8_t)LEVEL_TO_PCT(light_level());
     dp_report(RB_LIGHT);
   }
   if (dp.test_mode != TEST_NONE && timer_expired(&app.test_timer))
