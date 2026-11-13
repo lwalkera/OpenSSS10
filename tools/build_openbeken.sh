@@ -53,7 +53,7 @@ else
 fi
 
 # The version shows up on OpenBeken's pages and in the file names
-version=${OBK_VERSION:-sss10_$(git rev-parse --short=8 HEAD)$(git diff --quiet HEAD -- openbeken/patches || echo _dirty)}
+version=${OBK_VERSION:-sss10_$(git rev-parse --short=8 HEAD)$([ -z "$(git status --porcelain -- openbeken/patches)" ] || echo _dirty)}
 
 make -C "$SUB" APP_VERSION="$version" APP_NAME=OpenBK7231N OpenBK7231N
 

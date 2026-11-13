@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Laine Walker-Avina <lwalkera@ieee.org>
+Date: Sat, 7 Nov 2026 01:11:39 -0800
+Subject: [PATCH] Beken: enable DST rules (time_setDST)
+
+The SSS10's MCU runs its schedules on the local time it gets from the
+Wi-Fi module, so the clock must follow daylight saving time. The DST
+code already exists for other platforms; turn it on for Beken.
+
+Example (most of the US: second Sunday of March 2:00 to first Sunday of
+November 2:00, 60 minutes):
+
+    time_setDST 2 3 1 2 60 1 11 1 2 0
+---
+ src/obk_config.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/obk_config.h b/src/obk_config.h
+index 2d943abc..16babc07 100644
+--- a/src/obk_config.h
++++ b/src/obk_config.h
+@@ -291,7 +291,7 @@
+ #define ENABLE_TASMOTADEVICEGROUPS				1
+ #define ENABLE_LITTLEFS							1
+ #define ENABLE_NTP								1
+-// #define ENABLE_TIME_DST						1
++#define ENABLE_TIME_DST							1
+ #define ENABLE_TIME_SUNRISE_SUNSET				1
+ #define ENABLE_DRIVER_LED						1
+ #define ENABLE_DRIVER_BL0937					1

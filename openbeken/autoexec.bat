@@ -9,8 +9,14 @@ tuyaMcu_setBaudRate 9600
 tuyaMcu_defWiFiState 4
 // Local time is needed for the MCU's schedules (it requests cmd 0x1C).
 startDriver NTP
-// UTC offset in hours; adjust for your zone and daylight saving time
-ntp_timeZoneOfs -7
+// Standard-time UTC offset in hours; adjust for your zone
+ntp_timeZoneOfs -8
+// Daylight saving time rules (needs openbeken/patches/0003), two rules of
+//   nthWeek(0 = last) month weekday(1 = Sunday) hour minutesOfDSTafter
+// in local time. Here (most of the US and Canada): DST starts the second
+// Sunday of March at 2:00 and ends the first Sunday of November at 2:00.
+// EU: time_setDST 0 3 1 2 60 0 10 1 3 0 (with the zone's standard offset)
+time_setDST 2 3 1 2 60 1 11 1 2 0
 
 // DP 1 - lamp (TRIAC)
 setChannelType 1 Toggle
