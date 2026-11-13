@@ -63,19 +63,9 @@ setChannelType 11 TextField
 setChannelLabel 11 Sound_threshold
 linkTuyaMCUOutputToChannel 106 val 11
 
-// DP 115 - sensor test mode (0 off, 2 PIR test, 4 sound test, 5 light meter)
-setChannelType 12 TextField
-setChannelLabel 12 Test_mode
-linkTuyaMCUOutputToChannel 115 enum 12
-
-// DP 125 / 126 - light level and peak sound level
-// (reported only while test mode is 5 or 3/4)
-setChannelType 13 ReadOnly
-setChannelLabel 13 Light_level
-linkTuyaMCUOutputToChannel 125 val 13
-setChannelType 14 ReadOnly
-setChannelLabel 14 Sound_peak
-linkTuyaMCUOutputToChannel 126 val 14
+// DP 115 (sensor test mode) and DP 125 / 126 (light level, sound peak) are
+// left out: they are for setting up, which the web app's SSS10 tab does, and
+// would only clutter Home Assistant. Channels 12-14 are unused.
 
 // DP 105 - status-colour LED level (red + 1/5 green, shows yellow)
 setChannelType 15 Dimmer
