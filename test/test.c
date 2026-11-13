@@ -298,7 +298,7 @@ static void test_triac(void)
     }
   }
 
-  /* Fade duration in mains cycles: 0.8 s, 6.7 s, 20 s at 50 Hz */
+  /* Fade duration in AC supply cycles: 0.8 s, 6.7 s, 20 s at 50 Hz */
   static const int expect_cycles[4] = { 1, 40, 334, 1000 };
   for (uint8_t mode = 0; mode < 4; mode++)
   {

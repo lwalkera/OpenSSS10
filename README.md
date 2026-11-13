@@ -87,7 +87,7 @@ The script uploads at about 1.5 KB/s. OpenBeken writes uploads to flash at
 about 2.7 KB/s and buffers anything faster in heap; a fast upload pushes free
 heap below 25 KB, and OpenBeken reboots if it stays that low for 5 s.
 
-Mains is present on the board: use an isolation transformer when probing.
+The AC supply is present on the board: use an isolation transformer when probing.
 
 ### Building OpenBeken
 
@@ -177,7 +177,7 @@ may only listen right after a power-on), use the flash build instead:
    button still pulses the reset line.
 3. When the module is done, `make flash` puts the firmware back.
 
-Mains is present on the board: power it from an isolated supply or an
+The AC supply is present on the board: power it from an isolated supply or an
 isolation transformer while it is open.
 
 ## Debugging the FT32 with OpenOCD
@@ -230,4 +230,4 @@ clock. The config also works around the chip's own quirks:
   power-on with the sensor held in the hand, so it doesn't show the settled
   idle level. Confirm with the telemetry stream in an empty room.
 - The HS6605 slot timings in `src/pir.c` are cycle counts; check them against
-  the spec's 13.25 us slot with a logic analyser.
+  the spec's 13.25 us slot with a logic analyzer.

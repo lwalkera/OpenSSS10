@@ -14,7 +14,7 @@ typedef struct {
 } gate_table_t;
 
 /*
- * period: mains period in 10 us ticks (one zero-cross edge per full cycle).
+ * period: AC supply period in 10 us ticks (one zero-cross edge per full cycle).
  * The gate is held on from the firing angle to ~165 deg of each half cycle.
  * At full level it is held continuously instead, so the TRIAC re-triggers
  * right after every zero crossing (the stock firmware releases it at 165 deg
@@ -41,7 +41,7 @@ static inline void triac_gate_table(gate_table_t *t, uint16_t period, uint16_t l
   t->ev[3] = (uint16_t)(t_off + half);
 }
 
-/* Level step per mains cycle for fade modes 0..3 (spec §9.3); 0 = jump */
+/* Level step per AC supply cycle for fade modes 0..3 (spec §9.3); 0 = jump */
 static inline uint16_t triac_fade_step(uint8_t mode)
 {
   static const uint16_t steps[4] = { TRIAC_LEVEL_MAX, 25, 3, 1 };

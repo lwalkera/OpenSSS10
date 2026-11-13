@@ -73,7 +73,7 @@ linkTuyaMCUOutputToChannel 106 val 11
 // left out: they are for setting up, which the web app's SSS10 tab does, and
 // would only clutter Home Assistant. Channels 12-14 are unused.
 
-// DP 105 - status-colour LED level (red + 1/5 green, shows yellow)
+// DP 105 - status-color LED level (red + 1/5 green, shows yellow)
 setChannelType 15 Dimmer
 setChannelLabel 15 Status_LED
 linkTuyaMCUOutputToChannel 105 val 15

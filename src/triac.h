@@ -1,4 +1,4 @@
-/* TRIAC phase control synchronised to the mains zero cross (spec §9) */
+/* TRIAC phase control synchronized to the AC supply zero cross (spec §9) */
 #ifndef TRIAC_H
 #define TRIAC_H
 
@@ -14,7 +14,7 @@ void triac_set(bool on, uint8_t fade_mode);
 /* True once the level has reached the requested target */
 bool triac_done(void);
 
-/* Averaged mains period in 10 us ticks, 0 until acquired */
+/* Averaged AC supply period in 10 us ticks, 0 until acquired */
 uint16_t triac_period(void);
 
 #endif

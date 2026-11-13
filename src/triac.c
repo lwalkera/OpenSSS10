@@ -48,7 +48,7 @@ static bool period_valid(uint16_t p)
   return p >= PERIOD_MIN && p < PERIOD_MAX;
 }
 
-/* Stop firing and wait for a clean run of mains periods */
+/* Stop firing and wait for a clean run of AC supply periods */
 static void lose_sync(void)
 {
   gate_off();
@@ -226,7 +226,7 @@ void triac_poll(void)
 {
   uint16_t period = period_avg;
 
-  /* One level step per mains cycle: only after the ISR took the last table */
+  /* One level step per AC supply cycle: only after the ISR took the last table */
   if (period == 0 || table_pending)
     return;
 

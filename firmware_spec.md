@@ -2,7 +2,7 @@
 ## FT32F030C8AT7 (STM32F030-compatible) Tuya Wi-Fi Smart Switch with Soft-Start TRIAC, PIR, Sound and Light Sensing
 
 Source: 64 KB flash dump (`dir.bin`) plus bench observations and a PB12 logic capture.
-Purpose: provide enough detail to rewrite the application firmware in C with equivalent behaviour.
+Purpose: provide enough detail to rewrite the application firmware in C with equivalent behavior.
 
 **Confidence tags used throughout**
 
@@ -19,7 +19,7 @@ Addresses of the original routines are given as `@0x0800xxxx` so the disassembly
 
 ## 1. Product summary
 
-A mains wall/plug-in device that switches a lamp through a TRIAC with optional soft fade, controlled by:
+A wall/plug-in device on the AC supply that switches a lamp through a TRIAC with optional soft fade, controlled by:
 
 - a Tuya Wi-Fi module on USART1 (Tuya MCU serial protocol, 9600 baud),
 - a push button (PF7),
@@ -34,7 +34,7 @@ It also has a built-in LED night-light/indicator: 3 white LEDs (one PWM group) a
 ## 2. MCU, clocks, memory
 
 ### 2.1 MCU
-FMD **FT32F030C8AT7** (LQFP48): an STM32F030-register-compatible Cortex-M0 (ARMv6-M, Thumb) with 64 KB flash organised as **128 pages of 512 bytes**, and 8 KB SRAM. **[C]** Sources: FMD FT32F03xx6/x8 datasheet v1.14 and FT32F0xxx6/x8 reference manual v1.50. Note that the FMD FT32**E**030 family is a different design and is not register-compatible.
+FMD **FT32F030C8AT7** (LQFP48): an STM32F030-register-compatible Cortex-M0 (ARMv6-M, Thumb) with 64 KB flash organized as **128 pages of 512 bytes**, and 8 KB SRAM. **[C]** Sources: FMD FT32F03xx6/x8 datasheet v1.14 and FT32F0xxx6/x8 reference manual v1.50. Note that the FMD FT32**E**030 family is a different design and is not register-compatible.
 
 ### 2.2 Clock tree (original)
 `SystemInit @0x08002010` **[C]**:
@@ -44,7 +44,7 @@ FMD **FT32F030C8AT7** (LQFP48): an STM32F030-register-compatible Cortex-M0 (ARMv
 - PLLON, wait PLLRDY, SW = PLL, wait SWS = PLL.
 - Result: **SYSCLK = HCLK = PCLK = 48 MHz**.
 
-This is a documented setting on the FT32F0xx: RCC_CFGR `PLLSRC[1:0]` = 00 HSI/2, **01 HSI/PREDIV**, 10 HSE/PREDIV, 11 HSI48/PREDIV. Observed behaviour matches 48 MHz (1.5 Hz pairing blink, ~3 min pairing timeout, working 9600-baud Tuya link). If the code is ever ported to a genuine STM32F030x8, where bit 15 is reserved, use HSI/2 × 12 instead.
+This is a documented setting on the FT32F0xx: RCC_CFGR `PLLSRC[1:0]` = 00 HSI/2, **01 HSI/PREDIV**, 10 HSE/PREDIV, 11 HSI48/PREDIV. Observed behavior matches 48 MHz (1.5 Hz pairing blink, ~3 min pairing timeout, working 9600-baud Tuya link). If the code is ever ported to a genuine STM32F030x8, where bit 15 is reserved, use HSI/2 × 12 instead.
 
 ### 2.3 Flash map
 | Range | Size | Content |
@@ -105,8 +105,8 @@ The application's OTA code (§8.6) writes the staging image and the marker, then
 | PB0 | AF1 | TIM3_CH3 – white LED PWM (inverted) |
 | PB1 | AF1 | TIM3_CH4 – white LED PWM (inverted) |
 | PB3 | Output PP, high speed, pull-up, idle **high** | TRIAC gate (opto LED), **active low** |
-| PB4 | Input, pull-up | Wall-switch mains sense (three-way variant only; unpopulated on this model) |
-| PB5 | Input, pull-up, EXTI5 rising | Mains zero-cross (optocoupler), one rising edge per mains cycle |
+| PB4 | Input, pull-up | Wall-switch AC supply sense (three-way variant only; unpopulated on this model) |
+| PB5 | Input, pull-up, EXTI5 rising | AC supply zero-cross (optocoupler), one rising edge per AC supply cycle |
 | PB10 | Output PP, idle **high** | Tuya module reset, pulsed low 100 ms |
 | PB12 | Input, no pull; driven by bit-bang | HS6605 pin 8 single-wire data (§11.1) |
 | PB13 | AF2 | TIM1_CH1N – RGB green |
@@ -173,7 +173,7 @@ Timer object = `{uint32 sec; uint16 ms}` holding an absolute expiry time:
 - `timer_expired(t)` `@0x0800414C`: true if now ≥ expiry.
 - `delay_ms(ms)` `@0x08004014`: blocking busy-wait using TIM6.
 
-### 6.2 Initialisation order (`main @0x08005DB4`)
+### 6.2 Initialization order (`main @0x08005DB4`)
 1. Vector table to SRAM, SYSCFG remap.
 2. Storage slot table init.
 3. TIM6 timebase.
@@ -316,7 +316,7 @@ Ignored until boot finishes. The status byte is stored for display logic.
 ## 9. TRIAC phase control
 
 ### 9.1 Zero-cross measurement (EXTI5 ISR `@0x08001A90`) **[C]**
-The optocoupler gives **one rising edge per full mains cycle**. On each edge:
+The optocoupler gives **one rising edge per full AC supply cycle**. On each edge:
 ```c
 uint16_t period = TIM14->CNT;   // 10 µs ticks
 TIM14->CNT = 0;
@@ -348,7 +348,7 @@ The gate is **held on** from the firing angle to about 165°, not pulsed, so the
 **This firmware differs at level 1000:** it holds the gate on continuously (PB3 low from the first zero-cross edge, with no release at 165°), so the TRIAC re-triggers right after every zero crossing. With the stock 165–180° release, LED fixtures blinked badly at full on. When the level drops below 1000, the gate is released at once rather than at the next edge (in case the zero-cross input sees no edges while the TRIAC is held on), and the phase-cut table above takes over from the next edge. Levels below 1000 behave as in the stock firmware.
 
 ### 9.3 Fading (`@0x080061C8`, `@0x080061B0`) **[C]**
-`triac_set(on, fade_mode)`. `level` (0–1000) is stepped **once per mains cycle**, only after the ISR has consumed the previous table, toward 1000 (on) or 0 (off):
+`triac_set(on, fade_mode)`. `level` (0–1000) is stepped **once per AC supply cycle**, only after the ISR has consumed the previous table, toward 1000 (on) or 0 (off):
 
 | fade_mode (DP 103 / DP 104) | Step | Full fade at 50 Hz |
 |---|---|---|
@@ -373,7 +373,7 @@ There is **no intermediate dimming level**: the load is either fading to on or f
 | 2 | PB13 (TIM1 CCR1) | RGB green — driven at 1/5 level when mask == 0b0110 |
 | 3 | PB14 (TIM1 CCR2) | RGB blue |
 
-Normal cyan = mask `0b1100` (green + blue). Status colour = mask `0b0110` = red at the gamma-corrected level plus green at 1/5 of that duty cycle; it appears **yellow** on this hardware because the green die is much brighter than the red. The colour of each pin was confirmed on hardware: DP 115 = 4 breathes PB13 alone and lights green.
+Normal cyan = mask `0b1100` (green + blue). Status color = mask `0b0110` = red at the gamma-corrected level plus green at 1/5 of that duty cycle; it appears **yellow** on this hardware because the green die is much brighter than the red. The color of each pin was confirmed on hardware: DP 115 = 4 breathes PB13 alone and lights green.
 
 ### 10.2 Brightness curve **[C]**
 Level 0–100 maps to CCR through the gamma table at 0x0800_6D00 (101 × uint16):
@@ -422,7 +422,7 @@ Normal words: **0x01** = white at DP 101 level, **0x1C** = cyan at DP 102 level.
 
 Higher L = brighter room, so the LEDs dim as the room gets darker.
 
-### 10.6 Colour selection (`@0x080049E8`) **[C]**
+### 10.6 Color selection (`@0x080049E8`) **[C]**
 Low 6 bits of the word, driven by the load state machine (§14.1) and the active schedule record `rec`:
 
 | Load state | No active record | Active record |
@@ -440,7 +440,7 @@ With the default record (§13.3) this gives: **on → white, off (armed, dark) �
 ### 11.1 HS6605 digital PIR interface (PB12 ↔ HS6605 pin 8) **[C]** (code + logic capture)
 The HS6605 (SOIC-8) conditions the pyroelectric sensor and outputs **filtered signed 16-bit samples at ≈63.5 Hz** (period 15.74 ms, varying from 14.7 to 16.8 ms) over a single bidirectional line.
 
-**Line behaviour**
+**Line behavior**
 - Idle between frames: **low** (driven by the HS6605).
 - **Data ready:** the HS6605 drives the line **high** and keeps it high until it is read.
 - PB12 is configured as input with no pull; the MCU switches it to output only during each slot.
@@ -556,7 +556,7 @@ Encoding inside cmd 0x06 / 0x07: `id(1) type(1) len(2, BE) value`. Types: 1 bool
 | 102 | value | rw | Cyan LED level | 0–100; 5 s preview | ✔ | 5 | C |
 | 103 | enum | rw | TRIAC fade-in | 0–3 (§9.3) | ✔ | 6 | C |
 | 104 | enum | rw | TRIAC fade-out | 0–3 | ✔ | 7 | C |
-| 105 | value | rw | Status-colour (red + 1/5 green, appears yellow) level | 0–100; 5 s preview | ✔ | 8 | C |
+| 105 | value | rw | Status-color (red + 1/5 green, appears yellow) level | 0–100; 5 s preview | ✔ | 8 | C |
 | 106 | value | rw | Sound threshold | 20–100 (100 = off) | ✔ | 9 | C |
 | 107 | value | rw | Dark threshold for light preset 0 | 0–100 (light level at or below = dark) | ✔ | 10 | C |
 | 108 | – | – | Not handled | | | | C |
@@ -743,13 +743,13 @@ void load_switch(bool on, uint8_t src) {
 | 3 | DP 115 test mode entered (forces off) |
 
 ### 14.2 Load state machine (`@0x08005300`, byte 0x20000925) **[C]**
-| State | Meaning | Behaviour |
+| State | Meaning | Behavior |
 |---|---|---|
 | 0 | Boot | If PF7 is held → factory test (8). Otherwise run_mode = 2; if not paired → start pairing (§14.3); go to 5. |
-| 3 | Switch-off requested | `triac_set(0, DP104)`; snapshot dark flag. If the active record has mode 2: src 0 → hold-off timer DP 50 s → 4; src 3 → hold-off 3 s → 4; otherwise → 5. Update LED colour. |
+| 3 | Switch-off requested | `triac_set(0, DP104)`; snapshot dark flag. If the active record has mode 2: src 0 → hold-off timer DP 50 s → 4; src 3 → hold-off 3 s → 4; otherwise → 5. Update LED color. |
 | 4 | Hold-off | Wait for the timer → 5 (LED cyan meanwhile) |
 | 5 | Off / armed | Re-render LEDs when the dark flag changes. DP 115 = 2: motion → DP 115 = 1, `switch(1,2)`. DP 115 = 4: sound → DP 115 = 3, `switch(1,2)`. Otherwise: record mode 2 && dark && motion → `switch(1,2)`. **[C]** (`@0x080053D0`) While DP 115 is 2 or 4, only that test's sensor is checked; the normal PIR rule is skipped. |
-| 6 | Switch-on requested | `triac_set(1, DP103)`. If the record has off_mode 2, start the auto-off timer (`autooff_s`) → 7. Update LED colour. |
+| 6 | Switch-on requested | `triac_set(1, DP103)`. If the record has off_mode 2, start the auto-off timer (`autooff_s`) → 7. Update LED color. |
 | 7 | On | If the record has off_mode 2: motion or sound restarts the auto-off timer; on expiry → `switch(0,2)`. |
 
 **Night-light, schedule mode 3 (this firmware only).** Motion never switches the load in this mode; it lights the night-light instead (LED word bit 14, §10.4).
@@ -763,7 +763,7 @@ void load_switch(bool on, uint8_t src) {
 ### 14.3 Wi-Fi pairing / connection supervisor (`@0x08005030`, byte 0x20000929) **[C]**
 Supervisor states:
 
-| State | Behaviour |
+| State | Behavior |
 |---|---|
 | 0 | When the module becomes alive (first heartbeat) → 0x16 |
 | 0x16 | If Wi-Fi status ≠ 4, start a 20 s timer → 0x17 |
@@ -786,7 +786,7 @@ Pairing is entered:
 Observed: white blink ≈1.5 Hz for ≈3 minutes.
 
 ### 14.4 DP 115 sensor test modes **[C]**
-| Value | Set by | Behaviour |
+| Value | Set by | Behavior |
 |---|---|---|
 | 0 | app / timeout | Normal |
 | 1 | firmware | Result: motion detected (lamp switched on, src 2) |
@@ -802,7 +802,7 @@ Any write restarts a 900 s timeout; when it expires, DP 115 returns to 0 and LED
   - short press (< 6 s) toggles the load, `switch(!dp1, 0)`,
   - hold 6 s → pairing (state 0x19),
   - held at boot → factory test.
-- **PB4 wall switch** (`@0x08005EEC`) **[M]:** measures the mains-pulse activity on the switch leg against a quarter of the mains period, and derives a debounced "switch leg live" state. Every change toggles the load (src 0), which gives two-way switching. Unpopulated on this model; with the pull-up it stays constant, so it never toggles.
+- **PB4 wall switch** (`@0x08005EEC`) **[M]:** measures the AC supply pulse activity on the switch leg against a quarter of the AC supply period, and derives a debounced "switch leg live" state. Every change toggles the load (src 0), which gives two-way switching. Unpopulated on this model; with the pull-up it stays constant, so it never toggles.
 
 ### 14.6 Factory test (`@0x080054D4`…) **[M]**
 Entered by holding PF7 at power-up:

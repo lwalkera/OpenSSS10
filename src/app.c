@@ -269,7 +269,7 @@ static void set_color(uint16_t color)
   app.led_word = (uint16_t)((app.led_word & ~LW_COLOR_MASK) | color);
 }
 
-/* Indicator colour for the load state (spec §10.6) */
+/* Indicator color for the load state (spec §10.6) */
 static void update_color(void)
 {
   const sched_entry_t *rec = schedule_active();
@@ -988,12 +988,12 @@ bool button_take_press(void)
 #ifdef FEATURE_WALLSWITCH
 /*
  * Port of the stock routine at 0x08005EEC. A live switch leg pulls PB4 low
- * through an optocoupler on each mains half-wave. After a 100 ms settling
+ * through an optocoupler on each AC supply half-wave. After a 100 ms settling
  * window, the leg is:
  *   - dead if PB4 stays high for 100 ms;
  *   - live if, within 100 ms after the first low (plus 50 ms), PB4 changes
  *     more than 8 times with no two changes closer than a quarter of the
- *     mains period, or stays low throughout.
+ *     AC supply period, or stays low throughout.
  * Anything in between leaves the state unchanged. Every change of the
  * debounced state toggles the load.
  */

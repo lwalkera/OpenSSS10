@@ -269,7 +269,7 @@
       { title: 'Lamp', items: [
         S(1, 'bool', 'Lamp', 'The load. Always off after a power cut.'),
         S(103, 'enum', 'Fade in', 'How long the lamp takes to reach full brightness when it switches on. ' +
-          'Times are for 60 Hz mains; 20% longer at 50 Hz.', { options: FADES }),
+          'Times are for a 60 Hz AC supply; 20% longer at 50 Hz.', { options: FADES }),
         S(104, 'enum', 'Fade out', 'How long the lamp takes to go off.', { options: FADES }),
         S(7, 'val', 'Countdown', 'Seconds until the lamp is set to the state below; 0 = no countdown. ' +
           'The MCU only reports the remaining time once a minute. Not saved across power cuts.', { min: 0, max: 86400, unit: 's' }),
@@ -286,7 +286,7 @@
           'sound restarts the auto-off timer just like motion. Lower is more sensitive; very loud peaks always count; ' +
           '100 turns sound off. Default 65.', { min: 20, max: 100 }),
       ]},
-      { title: 'Light presets', blurb: 'Each schedule entry picks one of these. Its PIR control and colour changes only act ' +
+      { title: 'Light presets', blurb: 'Each schedule entry picks one of these. Its PIR control and color changes only act ' +
           'when the light level (0-100, higher is brighter) is at or below the threshold; 100 means always dark enough. ' +
           'Use the light meter test below to see the current level.', items: [
         S(107, 'val', 'Preset 0 dark threshold', 'Default 10 (only quite dark rooms).', { min: 0, max: 100 }),
@@ -294,7 +294,7 @@
         S(124, 'val', 'Preset 2 dark threshold', 'Default 100 (always). Used by the built-in schedule.', { min: 0, max: 100 }),
       ]},
       { title: 'Indicator LEDs', blurb: 'The front LEDs show white when motion will switch the lamp on (or it is on with ' +
-          'auto-off) and cyan otherwise. Changing a level shows that colour for 5 s as a preview.', items: [
+          'auto-off) and cyan otherwise. Changing a level shows that color for 5 s as a preview.', items: [
         S(101, 'val', 'White level', 'Brightness 0-100 of the white indicator.', { min: 0, max: 100, unit: '%' }),
         S(102, 'val', 'Cyan level', 'Brightness 0-100 of the cyan indicator.', { min: 0, max: 100, unit: '%' }),
         S(105, 'val', 'Status level', 'Brightness 0-100 of the yellow breathing shown when the Wi-Fi connection is lost.',
@@ -305,7 +305,7 @@
       { title: 'Night-light', blurb: 'Used by schedule entries in Night-light mode: while the lamp is off, motion ' +
           '(in a dark enough room) lights the LEDs at these levels for the entry\'s auto-off time; motion or sound keeps ' +
           'them on. The button or app still switches the lamp as usual, and switching it off lights the night-light. ' +
-          'Set a level to 0 to leave that colour off. Changing a level shows the night-light for 5 s.', items: [
+          'Set a level to 0 to leave that color off. Changing a level shows the night-light for 5 s.', items: [
         S(128, 'val', 'White', 'Brightness 0-100 of the white LEDs. Default 20.', { min: 0, max: 100, unit: '%' }),
         S(129, 'val', 'Red', 'Brightness 0-100 of the red LED. Default 0.', { min: 0, max: 100, unit: '%' }),
         S(130, 'val', 'Green', 'Brightness 0-100 of the green LED. Default 0.', { min: 0, max: 100, unit: '%' }),

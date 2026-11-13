@@ -15,11 +15,11 @@
 #define GATE_PORT         GPIOB
 #define GATE_PIN          3
 
-/* Wall-switch mains sense (three-way variant, unpopulated) */
+/* Wall-switch AC supply sense (three-way variant, unpopulated) */
 #define WALLSW_PORT       GPIOB
 #define WALLSW_PIN        4
 
-/* Mains zero-cross optocoupler, one rising edge per cycle, EXTI5 */
+/* AC supply zero-cross optocoupler, one rising edge per cycle, EXTI5 */
 #define ZC_PORT           GPIOB
 #define ZC_PIN            5
 
