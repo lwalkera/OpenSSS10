@@ -6,6 +6,10 @@ The image is uploaded to OpenBeken's LittleFS, then OpenBeken sends it to the
 MCU with the Tuya MCU upgrade commands (0x0A/0x0B). The MCU checks the image
 (header, CRC-32, product key), and the bootloader installs it on restart.
 
+OpenBeken is restarted first: after days of uptime its heap can be too low
+for the upload, and it reboots itself partway through. --no-reboot skips
+this.
+
     tools/ota.py 192.168.0.108 build/pir-switch.bin
     make ota IP=192.168.0.108
 """
@@ -65,11 +69,49 @@ def ota_status(ip):
     return m.group(1).strip() if m else None
 
 
+def uptime(ip):
+    return json.loads(http(f"http://{ip}/api/info", timeout=5))["uptime_s"]
+
+
+def mcu_linked(ip):
+    """True once OpenBeken holds DP values from the MCU again"""
+    return bool(json.loads(http(f"http://{ip}/cm?cmnd=Dp", timeout=5)))
+
+
+def restart_openbeken(ip, timeout=90):
+    """Reboot OpenBeken for a fresh heap; wait for it and the MCU link."""
+    try:
+        before = uptime(ip)
+    except (OSError, ValueError) as e:
+        sys.exit(f"cannot reach OpenBeken at {ip}: {e}")
+    print(f"restarting OpenBeken on {ip} to free its heap (up {before} s)", flush=True)
+    http(f"http://{ip}/api/reboot", data=b"")
+    deadline = time.time() + timeout
+    back = False
+    while time.time() < deadline:
+        time.sleep(3)
+        try:
+            if not back:
+                # A lower uptime means the reboot has happened
+                back = uptime(ip) < before
+            if back and mcu_linked(ip):
+                print("  OpenBeken is back and the MCU is answering")
+                return
+        except (OSError, ValueError):     # still rebooting
+            pass
+    if not back:
+        sys.exit(f"OpenBeken did not come back within {timeout} s")
+    sys.exit(f"OpenBeken is back but has no DP values from the MCU after {timeout} s "
+             "(TuyaMCU link down, or flags 46/47 not set)")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("ip", help="OpenBeken device address")
     parser.add_argument("image", help="firmware .bin (with the patched OTA header)")
     parser.add_argument("--timeout", type=int, default=180, help="seconds to wait for completion")
+    parser.add_argument("--no-reboot", action="store_true",
+                        help="don't restart OpenBeken before the upload")
     args = parser.parse_args()
 
     image = open(args.image, "rb").read()
@@ -78,6 +120,9 @@ def main():
     if image[PRODUCT_KEY_OFFSET:PRODUCT_KEY_OFFSET + len(PRODUCT_KEY)] != PRODUCT_KEY:
         sys.exit(f"{args.image}: product key missing at offset 0x{PRODUCT_KEY_OFFSET:X}; "
                  "the MCU would reject it")
+
+    if not args.no_reboot:
+        restart_openbeken(args.ip)
 
     # OpenBeken's LittleFS is 32 KB by default: with autoexec.bat there is
     # room for one image, and littlefs writes a replacement file before it

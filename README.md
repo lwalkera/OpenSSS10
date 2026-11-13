@@ -59,8 +59,12 @@ Use SWD (and `make backup`) to go back.
 
 ### Updating over Wi-Fi
 
-`make ota IP=<address>` (`tools/ota.py`) uploads `build/pir-switch.bin` to
-OpenBeken's LittleFS as `mcu.bin` and starts `tuyaMcu_otaStart mcu.bin`.
+`make ota IP=<address>` (`tools/ota.py`) first restarts OpenBeken, since
+after days of uptime its heap can be too low for the upload, and waits for
+the MCU link to return. The Wi-Fi module and MQTT drop out for about 20 s;
+the lamp is not affected. `--no-reboot` skips this. The script then uploads
+`build/pir-switch.bin` to OpenBeken's LittleFS as `mcu.bin` and starts
+`tuyaMcu_otaStart mcu.bin`.
 OpenBeken then sends the image to the MCU with the Tuya upgrade commands
 (0x0A/0x0B) and the script follows the progress. An update takes about a
 minute. CI artifacts can be sent the same way:
