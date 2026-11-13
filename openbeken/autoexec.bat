@@ -105,3 +105,10 @@ linkTuyaMCUOutputToChannel 130 val 21
 setChannelType 22 Dimmer
 setChannelLabel 22 Nightlight_blue
 linkTuyaMCUOutputToChannel 131 val 22
+
+// DP 132 - restart request: the MCU reports 1 when the button is held 15 s
+// (its reset line does not restart this module), then restarts itself on
+// release. No channel type, so Home Assistant doesn't show it. The channel
+// goes back to 0 first so the next request is a change again.
+linkTuyaMCUOutputToChannel 132 bool 23
+addChangeHandler Channel23 == 1 backlog setChannel 23 0; reboot

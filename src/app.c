@@ -27,6 +27,8 @@
 #define TEST_HOLDOFF_S        3
 #define BUTTON_DEBOUNCE_MS    50
 #define BUTTON_LONG_MS        6000
+#define BUTTON_RESTART_MS     15000
+#define RESTART_SEND_MS       2000    /* longest wait for DP 132 to go out */
 #define DEFAULT_TAG           "CF.20"
 
 /* Load states (spec §14.2) */
@@ -101,6 +103,9 @@ static struct {
   bool r_ambient;
   uint8_t r_light;
   bool r_valid;
+  bool restart_pending;   /* 15 s hold: restart once the button is released */
+  bool restart_released;
+  sw_timer_t restart_timer;
 } app;
 
 /* ------------------------------------------------------------------------ */
@@ -927,9 +932,13 @@ static struct {
   bool raw;
   sw_timer_t debounce;
   sw_timer_t long_timer;
+  sw_timer_t restart_timer;
   bool long_fired;
+  bool restart_fired;
   bool short_event;
-  bool long_event;
+  bool long_hint_event;   /* held 6 s: show the pairing blink */
+  bool long_event;        /* released after 6 s, before 15 s: pair */
+  bool restart_event;     /* held 15 s */
 } btn;
 
 static void button_init(void)
@@ -955,17 +964,30 @@ void button_poll(void)
     if (raw)
     {
       timer_set_ms(&btn.long_timer, BUTTON_LONG_MS);
+      timer_set_ms(&btn.restart_timer, BUTTON_RESTART_MS);
       btn.long_fired = false;
+      btn.restart_fired = false;
     }
     else if (!btn.long_fired)
     {
       btn.short_event = true;
     }
+    else if (!btn.restart_fired)
+    {
+      btn.long_event = true;
+    }
   }
+  /* Pairing starts on release, not at 6 s, so a 15 s hold never sends the
+     module into pairing (OpenBeken then leaves Wi-Fi for its own AP) */
   if (btn.stable && !btn.long_fired && timer_expired(&btn.long_timer))
   {
     btn.long_fired = true;
-    btn.long_event = true;
+    btn.long_hint_event = true;
+  }
+  if (btn.stable && !btn.restart_fired && timer_expired(&btn.restart_timer))
+  {
+    btn.restart_fired = true;
+    btn.restart_event = true;
   }
 }
 
@@ -1152,11 +1174,51 @@ void app_poll(void)
       btn.short_event = false;
       app_switch(!dp.sw, SRC_MANUAL);
     }
+    if (btn.long_hint_event)
+    {
+      btn.long_hint_event = false;
+      set_pair_led(LW_PAIR_BLINK);
+    }
     if (btn.long_event)
     {
       btn.long_event = false;
       app.sup_state = SUP_PAIR_ENTER;
     }
+    if (btn.restart_event)
+    {
+      /*
+       * 15 s hold (this firmware only): ask the Wi-Fi module to restart
+       * with DP 132, which OpenBeken's autoexec.bat turns into a reboot;
+       * the module reset line PB10 does not restart the module on this
+       * board. The MCU restarts once the button is released: a reset while
+       * it is still held would boot into the factory test. Steady red until
+       * then.
+       */
+      btn.restart_event = false;
+      dp_report(RB_RESTART);
+      app.restart_pending = true;
+      app.led_word = LW_FACTORY | LED_RED;
+    }
+  }
+
+  if (app.restart_pending)
+  {
+    render_leds();
+    dp_report_poll();
+    if (!btn.stable && !app.restart_released)
+    {
+      app.restart_released = true;
+      timer_set_ms(&app.restart_timer, RESTART_SEND_MS);
+    }
+    if (app.restart_released && (dp_report_idle() || timer_expired(&app.restart_timer)))
+    {
+      if (app.settings_dirty || app.sched_dirty || app.nl_dirty)
+        app_save_all();
+      if (!dp_report_idle())
+        tuya_module_reset();   /* DP 132 did not go out; try the reset line */
+      NVIC_SystemReset();
+    }
+    return;
   }
 
   if ((app.led_word & LW_PREVIEW_MASK) && timer_expired(&app.preview_timer))

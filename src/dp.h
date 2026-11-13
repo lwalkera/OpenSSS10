@@ -41,6 +41,9 @@
 #define DP_NL_RED          129
 #define DP_NL_GREEN        130
 #define DP_NL_BLUE         131
+/* Report-only, sent once on a 15 s button hold: asks the Wi-Fi module to
+   restart (OpenBeken: autoexec.bat reboots on it). Not in the stock firmware */
+#define DP_RESTART         132
 
 /* Report-dirty bits */
 enum {
@@ -69,7 +72,8 @@ enum {
   RB_NL_RED = 28,
   RB_NL_GREEN = 29,
   RB_NL_BLUE = 30,
-  RB_COUNT = 31
+  RB_COUNT = 31,
+  RB_RESTART = 31        /* DP 132; on request only, not in RB_ALL */
 };
 
 #define RB_ALL  ((1u << RB_COUNT) - 1u)
@@ -118,6 +122,7 @@ void dp_report_all(void);
 
 /* Report pacer: one DP per frame, link idle, then 150 ms gap */
 void dp_report_poll(void);
+bool dp_report_idle(void);    /* nothing queued or being sent */
 
 /* Iterate over the DP records of a 0x06 payload */
 typedef void (*dp_record_fn)(uint8_t id, uint8_t type, const uint8_t *value, uint16_t len);

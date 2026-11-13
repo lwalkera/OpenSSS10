@@ -574,6 +574,7 @@ Encoding inside cmd 0x06 / 0x07: `id(1) type(1) len(2, BE) value`. Types: 1 bool
 | 126 | value | ro | Peak sound level of the last second | test modes 3/4 | – | 25 | C |
 | 127 | bool | rw | Ambient-adaptive LED brightness | | ✔ | 26 | C |
 | 128–131 | value | rw | **This firmware only:** night-light levels, white / red / green / blue | 0–100 each (0 = that output off); 5 s preview; defaults 20 / 0 / 0 / 0 | slot 3 | 27–30 | – |
+| 132 | bool | ro | **This firmware only:** module restart request, reported as 1 on a 15 s button hold (§14.5) | writes are ignored | – | 31 | – |
 
 Defaults (`@0x080041F4`, used on factory reset / first pairing):
 
@@ -801,6 +802,8 @@ Any write restarts a 900 s timeout; when it expires, DP 115 returns to 0 and LED
 - **PF7 button** (`@0x08002B44`, 50 ms debounce):
   - short press (< 6 s) toggles the load, `switch(!dp1, 0)`,
   - hold 6 s → pairing (state 0x19),
+  - **this firmware only:** pairing starts when the button is released after 6 s, not at the 6 s mark; the white pairing blink still starts at 6 s. A 15 s hold therefore never sends cmd 0x05, which makes OpenBeken leave the Wi-Fi network for its own access point,
+  - **this firmware only:** hold 15 s → DP 132 = 1 is reported, asking the module to restart (OpenBeken's `autoexec.bat` reboots on it), and the indicator turns steady red. PB10 does not restart the module on this board: after a 100 ms pulse OpenBeken kept running. Once the button is released and the report has gone out (at most 2 s), pending settings are saved and the MCU resets itself; if the report could not be sent, PB10 is pulsed first. Waiting for the release keeps it from booting into the factory test,
   - held at boot → factory test.
 - **PB4 wall switch** (`@0x08005EEC`) **[M]:** measures the AC supply pulse activity on the switch leg against a quarter of the AC supply period, and derives a debounced "switch leg live" state. Every change toggles the load (src 0), which gives two-way switching. Unpopulated on this model; with the pull-up it stays constant, so it never toggles.
 

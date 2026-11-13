@@ -109,6 +109,7 @@ static uint16_t encode_bit(unsigned bit, uint8_t *p)
   switch (bit)
   {
   case RB_SWITCH:       return put_u8(p, DP_SWITCH, DP_TYPE_BOOL, dp.sw);
+  case RB_RESTART:      return put_u8(p, DP_RESTART, DP_TYPE_BOOL, 1);
   case RB_COUNTDOWN:    return put_value(p, DP_COUNTDOWN, (int32_t)dp.countdown);
   case RB_PIR_SENS:     return put_u8(p, DP_PIR_SENS, DP_TYPE_ENUM, dp.pir_sens);
   case RB_HOLDOFF:      return put_value(p, DP_HOLDOFF, (int32_t)dp.holdoff_s);
@@ -144,6 +145,11 @@ static uint16_t encode_bit(unsigned bit, uint8_t *p)
       return put_schedule(p, bit - RB_SCHED_FIRST);
     return 0;
   }
+}
+
+bool dp_report_idle(void)
+{
+  return dirty == 0 && report_state == 0;
 }
 
 void dp_report_poll(void)
